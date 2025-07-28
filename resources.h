@@ -33,7 +33,7 @@ public:
 			if(this->IsValid()) {
 				CloseHandle(hFile);
 			}
-			hFile = std::exchange(other.hFile, INVALID_HANDLE_VALUE);
+			this->hFile = std::exchange(other.hFile, INVALID_HANDLE_VALUE);
 		}
 		return *this;
 	}
@@ -81,7 +81,7 @@ public:
 			if(this->IsValid()) {
 				CloseHandle(hFileMap);
 			}
-			hFileMap = std::exchange(other.hFileMap, nullptr);
+			this->hFileMap = std::exchange(other.hFileMap, nullptr);
 		}
 		return *this;
 	}
@@ -125,7 +125,7 @@ public:
 			if(this->IsValid()) {
 				UnmapViewOfFile(lpBaseAddress);
 			}
-			lpBaseAddress = std::exchange(other.lpBaseAddress, nullptr);
+			this->lpBaseAddress = std::exchange(other.lpBaseAddress, nullptr);
 		}
 		return *this;
 	}
@@ -140,6 +140,46 @@ public:
 	LPVOID Get() const;
 
 	LPVOID Release();
+
+	bool IsValid() const;
+};
+
+
+//封装管理zip_t*
+class ZipArchive
+{
+private:
+	zip_t * archive;
+public:
+	explicit ZipArchive(zip_t * z = nullptr):
+		archive(z)
+	{}
+
+	ZipArchive(const ZipArchive &) = delete;
+	ZipArchive & operator=(const ZipArchive &) = delete;
+
+	ZipArchive(ZipArchive && other) noexcept:
+		archive(std::exchange(other.archive, nullptr))
+	{}
+
+	ZipArchive & operator=(ZipArchive && other)noexcept
+	{
+		if(this != &other) {
+			if(this->IsValid()) {
+				zip_close(archive);
+			}
+			this->archive = std::exchange(other.archive, nullptr);
+		}
+	}
+
+	~ZipArchive();
+
+	operator zip_t * () const
+	{
+		return archive;
+	}
+
+	zip_t * Get() const;
 
 	bool IsValid() const;
 };

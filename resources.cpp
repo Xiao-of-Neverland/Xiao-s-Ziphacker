@@ -73,3 +73,23 @@ bool MapView::IsValid() const
 {
 	return lpBaseAddress != nullptr;
 }
+
+
+//ZipArchive部分
+
+ZipArchive::~ZipArchive()
+{
+	if(IsValid()) {
+		zip_close(archive);
+	}
+}
+
+zip_t * ZipArchive::Get() const
+{
+	return archive;
+}
+
+bool ZipArchive::IsValid() const
+{
+	return archive != nullptr;
+}
