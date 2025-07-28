@@ -1,3 +1,0 @@
-D:/VS2022/Xiao's Ziphacker/build/vcpkg/CMakeFiles/main.dir
-D:/VS2022/Xiao's Ziphacker/build/vcpkg/CMakeFiles/edit_cache.dir
-D:/VS2022/Xiao's Ziphacker/build/vcpkg/CMakeFiles/rebuild_cache.dir

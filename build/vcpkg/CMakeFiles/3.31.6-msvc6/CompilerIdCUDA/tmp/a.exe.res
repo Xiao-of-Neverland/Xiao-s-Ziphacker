@@ -1,1 +1,0 @@
--D__CUDA_ARCH_LIST__=520 -D__NV_LEGACY_LAUNCH -nologo "D:\VS2022\Xiao's Ziphacker\build\vcpkg\CMakeFiles\3.31.6-msvc6\CompilerIdCUDA\tmp\a_dlink.obj" "D:\VS2022\Xiao's Ziphacker\build\vcpkg\CMakeFiles\3.31.6-msvc6\CompilerIdCUDA\tmp\CMakeCUDACompilerId.obj" -link -INCREMENTAL:NO   "/LIBPATH:C:/Environments/CUDA/v12.9/bin/../lib/x64"  cudadevrt.lib  cudart_static.lib

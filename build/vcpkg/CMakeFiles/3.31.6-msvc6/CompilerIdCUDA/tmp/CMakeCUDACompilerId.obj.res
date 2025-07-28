@@ -1,1 +1,0 @@
--D__CUDA_ARCH__=520 -D__CUDA_ARCH_LIST__=520 -D__NV_LEGACY_LAUNCH -nologo -c -TP  -DCUDA_DOUBLE_MATH_FUNCTIONS -EHsc "-IC:/Environments/CUDA/v12.9/bin/../include"   "D:\VS2022\Xiao's Ziphacker\build\vcpkg\CMakeFiles\3.31.6-msvc6\CompilerIdCUDA\tmp\CMakeCUDACompilerId.cudafe1.cpp" 
