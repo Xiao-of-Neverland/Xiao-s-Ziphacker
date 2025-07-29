@@ -2,9 +2,10 @@
 
 #include <Windows.h>
 #include <zip.h>
-#include <string.h>
+#include <string>
 #include <fmt/core.h>
 #include <utility>
+#include <memory>
 
 //封装管理文件句柄
 class FileHandle
@@ -183,3 +184,19 @@ public:
 
 	bool IsValid() const;
 };
+
+
+//结构体：线程共享资源
+struct SharedResources
+{
+	std::shared_ptr<FileHandle> pFileHandle;
+	std::shared_ptr<FileMappingHandle> pFileMapHandle;
+	std::shared_ptr<MapView> pMapView;
+	zip_uint64_t fileSize = 0;
+	bool isValid = false;
+};
+
+
+//初始化线程共享资源
+SharedResources init_shared_resources(std::string target_path);
+

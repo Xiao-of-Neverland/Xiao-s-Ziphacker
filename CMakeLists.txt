@@ -16,7 +16,14 @@ find_package(libzip REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 17)
 
-add_executable (main "main.cpp" "PreValidation.cu" "resources.h" "resources.cpp")
+add_executable (main
+	"main.cpp"
+	"PreValidation.cu"
+	"resources.h"
+	"resources.cpp"
+	"multithread.h"
+	"multithread.cpp"
+)
 
 set_source_files_properties("PreValidation.cu" PROPERTIES LANGUAGE CUDA)
 
