@@ -189,14 +189,17 @@ public:
 //结构体：线程共享资源
 struct SharedResources
 {
+	bool isValid = false;
 	std::shared_ptr<FileHandle> pFileHandle;
 	std::shared_ptr<FileMappingHandle> pFileMapHandle;
 	std::shared_ptr<MapView> pMapView;
 	zip_uint64_t fileSize = 0;
-	bool isValid = false;
 };
 
 
 //初始化线程共享资源
 SharedResources init_shared_resources(std::string target_path);
+
+//从共享的内存映射资源创建并打开独立的zip文档对象
+ZipArchive init_zip_archive(const SharedResources & shared_resources);
 

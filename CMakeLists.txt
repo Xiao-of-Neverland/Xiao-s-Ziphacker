@@ -23,6 +23,8 @@ add_executable (main
 	"resources.cpp"
 	"multithread.h"
 	"multithread.cpp"
+	"options.h"
+	"options.cpp"
 )
 
 set_source_files_properties("PreValidation.cu" PROPERTIES LANGUAGE CUDA)
