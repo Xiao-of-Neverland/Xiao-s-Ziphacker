@@ -5,11 +5,7 @@
 #include <vector>
 #include <filesystem>
 #include <fmt/core.h>
-
-
-std::string numbers = "0123456789";
-std::string uppers = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-std::string lowers = "abcdefghijklmnopqrstuvwxyz";
+#include <Windows.h>
 
 
 struct Options
@@ -23,3 +19,8 @@ struct Options
 
 Options init_options(int & argc, char * argv[]);
 
+std::string gbk_to_utf8(const char * gbk_str);
+
+std::filesystem::path init_target_path(std::string_view & raw_path);
+
+std::pair<int, int> init_password_length_range(std::string_view & raw);

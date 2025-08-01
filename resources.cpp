@@ -171,7 +171,7 @@ ZipArchive init_zip_archive(const SharedResources & shared_resources)
 		&err
 	);
 	if(p_zip_source == nullptr) {
-		fmt::println("-- Failed to create zip source from buffer: {}", zip_error_strerror(&err));
+		fmt::println("-- Failed to create zip source from buffer: {} --", zip_error_strerror(&err));
 		return ZipArchive(nullptr);
 	}
 
