@@ -5,8 +5,15 @@
 int main(int argc, char * argv[])
 {
 	Options options;
-	if(argc > 2) {
+	if(argc > 1) {
 		options = init_options(argc, argv);
+		fmt::println("Isvalid: {}", options.isValid);
+		fmt::println("Path: {}", options.targetPath.u8string());
+		fmt::println("Charset: {}", options.charSet);
+		fmt::println("Len range: {} - {}", options.min_password_len, options.max_password_len);
+		if(!options.isValid) {
+			return 1;
+		}
 	} else {
 		options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao's Ziphacker\\test.zip");
 		options.isValid = true;
