@@ -21,7 +21,7 @@ int main(int argc, char * argv[])
 	
 	auto shared_resources = init_shared_resources(options.targetPath.u8string());
 
-	auto p_zip_archive = init_zip_archive(shared_resources);
+	auto zip_archive = init_zip_archive(shared_resources);
 
 	return 0;
 }
