@@ -12,4 +12,10 @@ void thread_worker_function(
 	Options & options
 );
 
-void generate_password(uint64_t index, int password_len, char * password);
+void generate_password(
+	uint64_t index,
+	std::string & charset,
+	int password_len,
+	char * current_password
+);
+
