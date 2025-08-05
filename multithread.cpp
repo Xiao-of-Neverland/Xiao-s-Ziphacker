@@ -1,6 +1,7 @@
 ﻿#include "multithread.h"
 
 std::atomic<bool> flag_password_found(false);
+std::string password;
 
 void thread_worker_function(
 	int thread_id,
@@ -43,6 +44,36 @@ void thread_worker_function(
 		return;
 	}
 
-	char * current_password = (char *)_alloca(sizeof(char) * options.max_password_len);
+	char * try_password = (char *)_malloca(sizeof(char) * options.max_password_len);
+	for(int password_len = options.min_password_len;
+		password_len <= options.max_password_len;
+		password_len++) {
+		uint64_t start_index;
+		uint64_t end_index;
+		for(uint64_t index = start_index; index < end_index; index++) {
+			if(flag_password_found.load()) {
+				break;
+			}
+			generate_password(index, options.charSet, password_len, try_password);
+			auto entry = zip_fopen_index_encrypted(
+				zip_archive.Get(),
+				encrypted_entry_index,
+				0,
+				try_password
+			);
+			if(entry != nullptr) {
+				zip_fclose(entry);
+				if(try_password != nullptr) {
+					password = try_password;
+					flag_password_found.store(true);
+				} else {
+					fmt::println("-- Error: try_password is null --");
+				}
+				break;
+			} else {
 
+			}
+		}
+	}
+	
 }

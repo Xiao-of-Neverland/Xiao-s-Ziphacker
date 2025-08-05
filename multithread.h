@@ -14,7 +14,7 @@ void thread_worker_function(
 
 void generate_password(
 	uint64_t index,
-	std::string & charset,
+	std::string & char_set,
 	int password_len,
 	char * current_password
 );
