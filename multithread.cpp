@@ -48,8 +48,14 @@ void thread_worker_function(
 	for(int password_len = options.min_password_len;
 		password_len <= options.max_password_len;
 		password_len++) {
-		uint64_t start_index;
-		uint64_t end_index;
+		auto index_range = init_index_range(
+			thread_id,
+			thread_cnt,
+			options.charSet.length(),
+			password_len
+		);
+		auto start_index = index_range.first;
+		auto end_index = index_range.second;
 		for(uint64_t index = start_index; index < end_index; index++) {
 			if(flag_password_found.load()) {
 				break;
