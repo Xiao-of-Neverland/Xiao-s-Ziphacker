@@ -3,6 +3,7 @@
 #include "resources.h"
 #include "options.h"
 #include <thread>
+#include <cmath>
 
 //线程工作函数
 void thread_worker_function(
@@ -20,7 +21,7 @@ void generate_password(
 	char * current_password
 );
 
-//初始化对应密码长度和线程id的index范围
+//初始化对应密码长度和线程id的index范围（左闭右开区间）
 std::pair<uint64_t, uint64_t> init_index_range(
 	int thread_id,
 	int thread_cnt,

@@ -23,5 +23,11 @@ int main(int argc, char * argv[])
 
 	auto zip_archive = init_zip_archive(shared_resources);
 
+	for(size_t i = 0; i < 10; i++) {
+		auto index_range = init_index_range(i, 10, 27, 4);
+		fmt::println("{}: [{}, {}]", i, index_range.first, index_range.second);
+	}
+	fmt::println("Total: {}", pow(27, 4));
+
 	return 0;
 }

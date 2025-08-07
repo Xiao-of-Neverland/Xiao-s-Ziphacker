@@ -83,3 +83,29 @@ void thread_worker_function(
 	}
 	
 }
+
+void generate_password(
+	uint64_t index,
+	std::string & char_set,
+	int password_len,
+	char * current_password
+)
+{
+
+}
+
+std::pair<uint64_t, uint64_t> init_index_range(
+	int thread_id,
+	int thread_cnt,
+	int char_set_len,
+	int password_len
+)
+{
+	uint64_t max_index = pow(char_set_len, password_len);
+	uint64_t first = max_index * thread_id / thread_cnt;
+	uint64_t second = max_index;
+	if(thread_id + 1 < thread_cnt) {
+		second = max_index * (thread_id + 1) / thread_cnt;
+	}
+	return {first, second};
+}
