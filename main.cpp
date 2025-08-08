@@ -2,6 +2,9 @@
 #include "resources.h"
 #include "multithread.h"
 
+std::string password;
+bool if_password_found = false;
+
 int main(int argc, char * argv[])
 {
 	Options options;
@@ -16,18 +19,19 @@ int main(int argc, char * argv[])
 		}
 	} else {
 		options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao's Ziphacker\\test.zip");
+		options.charSet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		options.min_password_len = 1;
+		options.max_password_len = 4;
 		options.isValid = true;
 	}
 	
-	auto shared_resources = init_shared_resources(options.targetPath.u8string());
+	auto shared_resources = init_shared_resources(options.targetPath.generic_string());
 
-	auto zip_archive = init_zip_archive(shared_resources);
+	thread_worker_function(0, 1, shared_resources, options);
 
-	for(size_t i = 0; i < 10; i++) {
-		auto index_range = init_index_range(i, 10, 27, 4);
-		fmt::println("{}: [{}, {}]", i, index_range.first, index_range.second);
+	if(if_password_found) {
+		fmt::println("{}", password);
 	}
-	fmt::println("Total: {}", pow(27, 4));
 
 	return 0;
 }

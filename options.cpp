@@ -16,7 +16,7 @@ Options init_options(int & argc, char * argv[])
 	bool if_have_uppers = false;
 	bool if_have_lowers = false;
 
-	for(size_t i = 1; i < argc; i++) {
+	for(size_t i = 1; i < argc; ++i) {
 		std::string_view arg(argv[i]);
 		if(arg == "-n" || arg == "-N") {
 			if_have_numbers = true;
@@ -36,7 +36,7 @@ Options init_options(int & argc, char * argv[])
 				fmt::println("-- Error: Invalid arguments, need target file path --");
 				return options;
 			}
-			i++;
+			++i;
 			std::string_view raw_path = argv[i];
 			options.targetPath = init_target_path(raw_path);
 			if(options.targetPath.generic_string().empty()) {
@@ -52,7 +52,7 @@ Options init_options(int & argc, char * argv[])
 				fmt::println("-- Error: Invalid arguments, need password length range --");
 				return options;
 			}
-			i++;
+			++i;
 			auto password_len_pair = init_password_len_range(i, argc, argv);
 			if(password_len_pair.first < 1) {
 				return options;
@@ -95,7 +95,7 @@ Options init_options(int & argc, char * argv[])
 std::string gbk_to_utf8(const char * gbk_str)
 {
 	// 将 GBK 转换为 UTF-16
-	int size = MultiByteToWideChar(CP_ACP, 0, gbk_str, -1, nullptr, 0);
+	auto size = MultiByteToWideChar(CP_ACP, 0, gbk_str, -1, nullptr, 0);
 	if(size == 0) {
 		return "";
 	}
@@ -103,7 +103,7 @@ std::string gbk_to_utf8(const char * gbk_str)
 	MultiByteToWideChar(CP_ACP, 0, gbk_str, -1, wstr.data(), size);
 
 	// 将 UTF-16 转换为 UTF-8
-	int utf8_size = WideCharToMultiByte(CP_UTF8, 0, wstr.data(), -1, nullptr, 0, nullptr, nullptr);
+	auto utf8_size = WideCharToMultiByte(CP_UTF8, 0, wstr.data(), -1, nullptr, 0, nullptr, nullptr);
 	std::string utf8_str(utf8_size, 0);
 	WideCharToMultiByte(CP_UTF8, 0, wstr.data(), -1, utf8_str.data(), utf8_size, nullptr, nullptr);
 	return utf8_str;
@@ -140,37 +140,34 @@ std::filesystem::path init_target_path(std::string_view & raw_path)
 
 std::pair<int, int> init_password_len_range(size_t & i, int & argc, char * argv[])
 {
-	fmt::println("argc: {}, i: {}", argc, i);
 	int first, second;
 	std::string_view arg1 = argv[i];
 	auto pos_sep = arg1.find_first_of(",-");
 	if(pos_sep != std::string_view::npos) {
-		i++;
+		++i;
 		auto result1 = std::from_chars(arg1.data(), arg1.data() + pos_sep, first);
 		auto result2 = std::from_chars(arg1.data() + pos_sep + 1, arg1.data() + arg1.size(), second);
 		if(result1.ec != std::errc{} || result2.ec != std::errc{}) {
 			fmt::println("-- Error: Invalid password len range --");
-			return{-1, -1};
+			return{0, 0};
 		}
 	} else if(i + 2 <= argc) {
 		std::string_view arg2 = argv[i + 1];
 		i += 2;
-		fmt::println("arg1: {} size: {}, arg2: {} size: {}", arg1, arg1.size(), arg2, arg2.size());
 		auto result1 = std::from_chars(arg1.data(), arg1.data() + arg1.size(), first);
 		auto result2 = std::from_chars(arg2.data(), arg2.data() + arg2.size(), second);
 		if(result1.ec != std::errc{} || result2.ec != std::errc{}) {
-			fmt::println("{} {}", result1.ec == std::errc{}, result2.ec == std::errc{});
 			fmt::println("-- Error: Invalid password len range, one input invalid --");
-			return{-1, -1};
+			return{0, 0};
 		}
 	} else {
 		fmt::println("-- Error: Invalid password len range, need two input --");
-		return{-1, -1};
+		return{0, 0};
 	}
 
-	if(!(0 < first && first <= second)) {
+	if(!(0 < first && first <= second && second <= UINT8_MAX)) {
 		fmt::println("-- Error: Invalid password len range --");
-		return{-1, -1};
+		return{0, 0};
 	}
 
 	return {first, second};

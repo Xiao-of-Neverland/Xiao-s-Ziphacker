@@ -13,12 +13,14 @@ void thread_worker_function(
 	Options & options
 );
 
+//-- 需要极限优化性能 --
 //将index转化为对应密码字符串
 void generate_password(
 	uint64_t index,
-	std::string & char_set,
-	int password_len,
-	char * current_password
+	const std::string & char_set,
+	const size_t & char_set_len,
+	const int & password_len,
+	char * try_password
 );
 
 //初始化对应密码长度和线程id的index范围（左闭右开区间）
