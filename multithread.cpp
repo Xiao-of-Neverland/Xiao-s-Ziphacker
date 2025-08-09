@@ -3,6 +3,10 @@
 extern bool if_password_found;
 extern std::string password;
 
+extern uint64_t start_index_when_found;
+extern uint64_t end_index_when_found;
+extern uint64_t index_when_found;
+
 void thread_worker_function(
 	int thread_id,
 	int thread_cnt,
@@ -73,13 +77,25 @@ void thread_worker_function(
 				0,
 				try_password
 			);
+			auto archive_err = zip_get_error(zip_archive.Get());
+			fmt::println("Zip err: {}, {}", archive_err->zip_err, archive_err->sys_err);
 			if(entry != nullptr) {
 				char temp_read[1024];
 				auto bytes_read_cnt = zip_fread(entry, temp_read, 1024);
+
+				auto entry_err = zip_file_get_error(entry);
+				zip_file_error_clear(entry);
 				zip_fclose(entry);
+				fmt::println("File err: {}, {}", zip_error_code_zip(entry_err), zip_error_code_system(entry_err));
+				if(zip_error_code_zip(archive_err) != ZIP_ER_OK || zip_error_code_zip(entry_err) != ZIP_ER_OK) {
+					continue;
+				}
 				if(bytes_read_cnt > 0) {
 					if(try_password != nullptr) {
 						password = try_password;
+						start_index_when_found = start_index;
+						end_index_when_found = end_index;
+						index_when_found = index;
 						if_password_found = true;
 						return;
 					} else {
@@ -94,6 +110,7 @@ void thread_worker_function(
 					break;
 				}
 			}
+			zip_error_clear(zip_archive.Get());
 		}
 	}
 }
@@ -106,15 +123,17 @@ void generate_password(
 	char * try_password
 )
 {
-	for(int i = password_len - 1; i >= 0; --i) {
-		try_password[i] = char_set[index % char_set.length()];
-		index /= char_set.length();
-		if(index == 0 && i < password_len - 1) {
-			while(i >= 0) {
-				try_password[i] = char_set[0];
-				--i;
-			}
-		}
+	int i = password_len - 1;
+	while(index >= char_set_len) {
+		try_password[i] = char_set[index % char_set_len];
+		index /= char_set_len;
+		--i;
+	}
+	try_password[i] = char_set[index];
+	--i;
+	while(i >= 0) {
+		try_password[i] = char_set[0];
+		--i;
 	}
 	try_password[password_len] = '\0';
 }
