@@ -31,6 +31,19 @@
             }
         },
         {
+            "name": "release",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/release",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe",
+                "CMAKE_CUDA_COMPILER": "nvcc.exe",
+                "CMAKE_CUDA_INCLUDE_DIRECTORIES": "&env{CUDA_PATH}/include",
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
             "name": "x64-debug",
             "displayName": "x64 Debug",
             "inherits": "windows-base",

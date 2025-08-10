@@ -26,7 +26,7 @@ int main(int argc, char * argv[])
 		options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao's Ziphacker\\test.zip");
 		options.charSet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 		options.min_password_len = 1;
-		options.max_password_len = 2;
+		options.max_password_len = 4;
 		options.isValid = true;
 	}
 	
@@ -50,8 +50,9 @@ int main(int argc, char * argv[])
 			try_cnt += pow(options.charSet.length(), i);
 		}
 		fmt::println("Count of try passwords: {}", try_cnt);
+		double trys_per_sec = try_cnt / ((double)time_cost_ms / 1000);
 		if(time_cost_ms >= 1000) {
-			fmt::println("count of trys per sec: {}", try_cnt / (time_cost_ms / 1000));
+			fmt::println("Count of trys per sec: {:.0f}", trys_per_sec);
 		}
 	} else {
 		fmt::println("Password not found");

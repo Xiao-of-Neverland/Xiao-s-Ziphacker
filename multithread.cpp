@@ -31,31 +31,32 @@ void thread_worker_function(
 		fmt::println("-- Error: ZIP archive have no file --");
 		return;
 	}
-	zip_uint64_t encrypted_entry_index = -1;
-	zip_stat_t entry_stat;
-	zip_stat_init(&entry_stat);
+	zip_uint64_t encrypted_file_index = -1;
+	zip_stat_t file_stat;
+	zip_stat_init(&file_stat);
 	for(size_t i = 0; i < zip_entries_cnt; ++i) {
-		zip_stat_index(zip_archive.Get(), i, 0, &entry_stat);
-		if(entry_stat.valid & ZIP_STAT_ENCRYPTION_METHOD) {
-			if(entry_stat.encryption_method != ZIP_EM_NONE) {
-				fmt::println("Try entry: {}", entry_stat.name);
-				encrypted_entry_index = i;
+		zip_stat_index(zip_archive.Get(), i, 0, &file_stat);
+		if(file_stat.valid & ZIP_STAT_ENCRYPTION_METHOD) {
+			if(file_stat.encryption_method != ZIP_EM_NONE) {
+				fmt::println("Try file: {}", file_stat.name);
+				encrypted_file_index = i;
 				break;
 			}
 		}
 	}
-	if(encrypted_entry_index == -1) {
+	if(encrypted_file_index == -1) {
 		fmt::println("-- Error: ZIP archive have no encrypted file --");
 		return;
 	}
 
-	char * try_password = (char *)_malloca(sizeof(char) * options.max_password_len);
+	char * try_password = (char *)_malloca(options.max_password_len);
+	char * file_data = (char *)_malloca(file_stat.size);
 	auto char_set_len = options.charSet.length();
 	for(int password_len = options.min_password_len;
 		password_len <= options.max_password_len;
 		++password_len) {
 		if(if_password_found) {
-			return;
+			break;
 		}
 		auto index_range = init_index_range(
 			thread_id,
@@ -67,41 +68,43 @@ void thread_worker_function(
 		auto end_index = index_range.second;
 		for(uint64_t index = start_index; index < end_index; ++index) {
 			if(if_password_found) {
-				return;
+				break;
 			}
 			generate_password(index, options.charSet, char_set_len, password_len, try_password);
 			fmt::println("Trying password: {}", try_password);
-			auto entry = zip_fopen_index_encrypted(
+			auto file = zip_fopen_index_encrypted(
 				zip_archive.Get(),
-				encrypted_entry_index,
+				encrypted_file_index,
 				0,
 				try_password
 			);
-			auto archive_err = zip_get_error(zip_archive.Get());
-			fmt::println("Zip err: {}, {}", archive_err->zip_err, archive_err->sys_err);
-			if(entry != nullptr) {
-				char temp_read[1024];
-				auto bytes_read_cnt = zip_fread(entry, temp_read, 1024);
-
-				auto entry_err = zip_file_get_error(entry);
-				zip_file_error_clear(entry);
-				zip_fclose(entry);
-				fmt::println("File err: {}, {}", zip_error_code_zip(entry_err), zip_error_code_system(entry_err));
-				if(zip_error_code_zip(archive_err) != ZIP_ER_OK || zip_error_code_zip(entry_err) != ZIP_ER_OK) {
-					continue;
-				}
-				if(bytes_read_cnt > 0) {
-					if(try_password != nullptr) {
-						password = try_password;
-						start_index_when_found = start_index;
-						end_index_when_found = end_index;
-						index_when_found = index;
-						if_password_found = true;
-						return;
-					} else {
-						fmt::println("-- Error: try_password is null --");
-						return;
+			if(file != nullptr) {
+				try {
+					auto read_cnt = zip_fread(file, file_data, file_stat.size);
+					auto file_err_zip = zip_file_get_error(file)->zip_err;
+					auto file_err_sys = zip_file_get_error(file)->sys_err;
+					int file_err_code = file_err_zip + file_stat.size - read_cnt;
+					fmt::println("File err: {} {}", file_err_zip, file_err_sys);
+					zip_file_error_clear(file);
+					zip_fclose(file);
+					if(file_err_code != 0) {
+						continue;
 					}
+				} catch(const std::bad_alloc & e) {
+					fmt::println("-- Error: Failed to allocate memory --");
+					zip_file_error_clear(file);
+					zip_fclose(file);
+				}
+				if(try_password != nullptr) {
+					password = try_password;
+					start_index_when_found = start_index;
+					end_index_when_found = end_index;
+					index_when_found = index;
+					if_password_found = true;
+					break;
+				} else {
+					fmt::println("-- Error: try_password is null --");
+					break;
 				}
 			} else {
 				auto zip_archive_err = zip_get_error(zip_archive.Get());
