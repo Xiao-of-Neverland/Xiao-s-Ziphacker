@@ -79,21 +79,16 @@ void thread_worker_function(
 				try_password
 			);
 			if(file != nullptr) {
-				try {
-					auto read_cnt = zip_fread(file, file_data, file_stat.size);
-					auto file_err_zip = zip_file_get_error(file)->zip_err;
-					auto file_err_sys = zip_file_get_error(file)->sys_err;
-					int file_err_code = file_err_zip + file_stat.size - read_cnt;
-					fmt::println("File err: {} {}", file_err_zip, file_err_sys);
-					zip_file_error_clear(file);
-					zip_fclose(file);
-					if(file_err_code != 0) {
-						continue;
-					}
-				} catch(const std::bad_alloc & e) {
-					fmt::println("-- Error: Failed to allocate memory --");
-					zip_file_error_clear(file);
-					zip_fclose(file);
+				auto read_cnt = zip_fread(file, file_data, file_stat.size);
+				auto file_err_zip = zip_file_get_error(file)->zip_err;
+				auto file_err_sys = zip_file_get_error(file)->sys_err;
+				int file_err_code = file_err_zip + file_stat.size - read_cnt;
+				fmt::println("File err: {} {}", file_err_zip, file_err_sys);
+				fmt::println("Read cnt: {}", read_cnt);
+				zip_file_error_clear(file);
+				zip_fclose(file);
+				if(file_err_code != 0) {
+					continue;
 				}
 				if(try_password != nullptr) {
 					password = try_password;
