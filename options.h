@@ -23,6 +23,9 @@ struct Options
 //初始化输入参数
 Options init_options(int & argc, char * argv[]);
 
+//输出帮助信息
+void print_help();
+
 //编码转换
 std::string gbk_to_utf8(const char * gbk_str);
 

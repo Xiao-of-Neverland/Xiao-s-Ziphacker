@@ -18,7 +18,10 @@ Options init_options(int & argc, char * argv[])
 
 	for(size_t i = 1; i < argc; ++i) {
 		std::string_view arg(argv[i]);
-		if(arg == "-n" || arg == "-N") {
+		if(arg == "-h" || arg == "-H") {
+			print_help();
+			return options;
+		} if(arg == "-n" || arg == "-N") {
 			if_have_numbers = true;
 			if_allocate_charset = true;
 		} else if(arg == "-u" || arg == "-U") {
