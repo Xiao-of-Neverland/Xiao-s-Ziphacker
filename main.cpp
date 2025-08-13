@@ -20,9 +20,11 @@ int main(int argc, char * argv[])
 		fmt::println("Charset: {}", options.charSet);
 		fmt::println("Len range: {} - {}", options.min_password_len, options.max_password_len);
 		if(!options.isValid) {
+			fmt::println("Invalid options, use '-h' to get help info");
 			return 1;
 		}
 	} else {
+		fmt::println("Need options, use '-h' to get help info");
 		options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao's Ziphacker\\test.zip");
 		options.charSet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 		options.min_password_len = 1;

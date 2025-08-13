@@ -95,6 +95,26 @@ Options init_options(int & argc, char * argv[])
 	return options;
 }
 
+void print_help()
+{
+	fmt::println("usage: XZP [char set option(s)] [target path] [password len range]\n");
+
+	fmt::println("char set option(s):");
+	fmt::println("\t[-n | -N]\tadd all numbers to char set");
+	fmt::println("\t[-u | -U]\tadd all upper case letters to char set");
+	fmt::println("\t[-l | -L]\tadd all lower case letters to char set");
+	fmt::println("these char set option(s) need at least one, repeated will be ignore\n");
+
+	fmt::println("target path:");
+	fmt::println("\t[-t | -T]\ttell prog to get target path");
+	fmt::println("\t[PATH | \"PATH\"]\ttarget path, have to be exist and end with \".zip\"");
+	fmt::println("[-t | -T] must be followed with [PATH | \"PATH\"], both need one and only one");
+
+	fmt::println("password len range:");
+	fmt::println("\t[-r | -R]\ttell prog to get password len range");
+
+}
+
 std::string gbk_to_utf8(const char * gbk_str)
 {
 	// 将 GBK 转换为 UTF-16
