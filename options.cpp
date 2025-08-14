@@ -107,12 +107,14 @@ void print_help()
 
 	fmt::println("target path:");
 	fmt::println("\t[-t | -T]\ttell prog to get target path");
-	fmt::println("\t[PATH | \"PATH\"]\ttarget path, have to be exist and end with \".zip\"");
-	fmt::println("[-t | -T] must be followed with [PATH | \"PATH\"], both need one and only one");
+	fmt::println("\t[PATH | \"PATH\"]\ttarget path, have to be exist, valid and end with \".zip\"");
+	fmt::println("[-t | -T] must be followed with [PATH | \"PATH\"], both need one and only one\n");
 
 	fmt::println("password len range:");
 	fmt::println("\t[-r | -R]\ttell prog to get password len range");
-
+	fmt::println("\t[RANGE]\tpassword len range, have to be two positove int, example:");
+	fmt::println("\t\t\t[MIN,MAX] [MIN MAX] [MIN-MAX]");
+	fmt::println("[-r | -R] must be followed with [RANGE], both need one and only one\n");
 }
 
 std::string gbk_to_utf8(const char * gbk_str)

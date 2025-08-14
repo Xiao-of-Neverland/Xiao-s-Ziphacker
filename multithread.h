@@ -31,3 +31,6 @@ std::pair<uint64_t, uint64_t> init_index_range(
 	int password_len
 );
 
+//对于极小文件，验证解密后数据的CRC32，判断尝试的密码是否正确
+bool check_CRC32(const char * file_data, zip_uint32_t crc);
+
