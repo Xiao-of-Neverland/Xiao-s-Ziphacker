@@ -48,9 +48,12 @@ void thread_worker_function(
 		fmt::println("-- Error: ZIP archive have no encrypted file --");
 		return;
 	}
-
+	
 	char * try_password = (char *)_malloca(options.max_password_len);
-	char * file_data = (char *)_malloca(file_stat.size);
+	uint8_t * file_data = (uint8_t *)_malloca(file_stat.size);
+	if(file_data == nullptr) {
+		return;
+	}
 	auto char_set_len = options.charSet.length();
 	for(int password_len = options.min_password_len;
 		password_len <= options.max_password_len;
@@ -84,11 +87,23 @@ void thread_worker_function(
 				auto file_err_sys = zip_file_get_error(file)->sys_err;
 				int file_err_code = file_err_zip + file_stat.size - read_cnt;
 				fmt::println("File err: {} {}", file_err_zip, file_err_sys);
+				if(read_cnt > 0) {
+					fmt::print("Data:");
+					for(size_t i = 0; i < read_cnt; ++i) {
+						fmt::print(" [{}]", file_data[i]);
+					}
+					fmt::print("\n");
+				}
 				fmt::println("Read cnt: {}", read_cnt);
 				zip_file_error_clear(file);
 				zip_fclose(file);
 				if(file_err_code != 0) {
 					continue;
+				}
+				if(read_cnt < 1024) {
+					if(!check_crc32(file_data, file_stat.crc, read_cnt)) {
+						continue;
+					}
 				}
 				if(try_password != nullptr) {
 					password = try_password;
@@ -150,4 +165,12 @@ std::pair<uint64_t, uint64_t> init_index_range(
 		second = max_index * (thread_id + 1) / thread_cnt;
 	}
 	return {first, second};
+}
+
+bool check_crc32(const uint8_t * file_data, zip_uint32_t crc, zip_uint64_t data_len)
+{
+	uint32_t data_crc = crc32(0L, Z_NULL, 0);
+	data_crc = crc32(crc, file_data, data_len);
+	fmt::println("Data crc: {}, expected crc: {}", data_crc, crc);
+	return data_crc == crc;
 }

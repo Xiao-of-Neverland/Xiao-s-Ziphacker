@@ -4,6 +4,7 @@
 #include "options.h"
 #include <thread>
 #include <cmath>
+#include <zlib.h>
 
 //线程工作函数
 void thread_worker_function(
@@ -32,5 +33,5 @@ std::pair<uint64_t, uint64_t> init_index_range(
 );
 
 //对于极小文件，验证解密后数据的CRC32，判断尝试的密码是否正确
-bool check_CRC32(const char * file_data, zip_uint32_t crc);
+bool check_crc32(const uint8_t * file_data, zip_uint32_t crc, zip_uint64_t data_len);
 
