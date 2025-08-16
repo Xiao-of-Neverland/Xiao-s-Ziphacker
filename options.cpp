@@ -97,7 +97,7 @@ Options init_options(int & argc, char * argv[])
 
 void print_help()
 {
-	fmt::println("usage: XZP [char set option(s)] [target path] [password len range]\n");
+	fmt::println("usage: XZP.exe [char set option(s)] [target path] [password len range]\n");
 
 	fmt::println("char set option(s):");
 	fmt::println("\t[-n | -N]\tadd all numbers to char set");
@@ -115,6 +115,8 @@ void print_help()
 	fmt::println("\t[RANGE]\tpassword len range, have to be two positove int, example:");
 	fmt::println("\t\t\t[MIN,MAX] [MIN MAX] [MIN-MAX]");
 	fmt::println("[-r | -R] must be followed with [RANGE], both need one and only one\n");
+
+	fmt::println("full example: XZP.exe -t \"D:\\test.zip\" -n -u -l -r 1,4");
 }
 
 std::string gbk_to_utf8(const char * gbk_str)
