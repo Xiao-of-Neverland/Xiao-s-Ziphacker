@@ -49,9 +49,13 @@ void thread_worker_function(
 		return;
 	}
 	
-	char * try_password = (char *)_malloca(options.max_password_len);
+	char * try_password = (char *)_malloca(options.max_password_len + 1);
+	if(try_password == nullptr) {
+		return;
+	}
 	uint8_t * file_data = (uint8_t *)_malloca(file_stat.size);
 	if(file_data == nullptr) {
+		_freea(try_password);
 		return;
 	}
 	auto char_set_len = options.charSet.length();
@@ -74,7 +78,6 @@ void thread_worker_function(
 				break;
 			}
 			generate_password(index, options.charSet, char_set_len, password_len, try_password);
-			fmt::println("Trying password: {}", try_password);
 			auto file = zip_fopen_index_encrypted(
 				zip_archive.Get(),
 				encrypted_file_index,
@@ -82,6 +85,7 @@ void thread_worker_function(
 				try_password
 			);
 			if(file != nullptr) {
+				fmt::println("Trying password: {}", try_password);
 				auto read_cnt = zip_fread(file, file_data, file_stat.size);
 				auto file_err_zip = zip_file_get_error(file)->zip_err;
 				auto file_err_sys = zip_file_get_error(file)->sys_err;
@@ -126,6 +130,8 @@ void thread_worker_function(
 			zip_error_clear(zip_archive.Get());
 		}
 	}
+	_freea(try_password);
+	_freea(file_data);
 }
 
 void generate_password(
@@ -170,7 +176,7 @@ std::pair<uint64_t, uint64_t> init_index_range(
 bool check_crc32(const uint8_t * file_data, zip_uint32_t crc, zip_uint64_t data_len)
 {
 	uint32_t data_crc = crc32(0L, Z_NULL, 0);
-	data_crc = crc32(crc, file_data, data_len);
-	fmt::println("Data crc: {}, expected crc: {}", data_crc, crc);
+	data_crc = crc32(data_crc, file_data, data_len);
+	fmt::println("Data crc: {:X}, expected crc: {:X}", data_crc, crc);
 	return data_crc == crc;
 }

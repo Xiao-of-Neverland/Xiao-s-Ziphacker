@@ -34,9 +34,27 @@ int main(int argc, char * argv[])
 	
 	auto timer_start = std::chrono::high_resolution_clock::now();
 
+	int thread_cnt = 0;
+	auto logical_processor_cnt = std::thread::hardware_concurrency();
+	if(logical_processor_cnt > 0) {
+		thread_cnt = (logical_processor_cnt + 1) / 2;
+	} else {
+		thread_cnt = 1;
+		fmt::println("Warnning: Can't get count of logical processor. Using only ONE thread");
+	}
+
 	auto shared_resources = init_shared_resources(options.targetPath.generic_string());
 
-	thread_worker_function(0, 1, shared_resources, options);
+	for(int thread_id = 0; thread_id < thread_cnt; ++thread_id) {
+		std::thread worker_thread(
+			thread_worker_function,
+			thread_id,
+			thread_cnt,
+			shared_resources,
+			options
+		);
+		worker_thread.join();
+	}
 
 	auto timer_end = std::chrono::high_resolution_clock::now();
 
@@ -45,9 +63,10 @@ int main(int argc, char * argv[])
 	).count();
 
 	if(if_password_found) {
+		fmt::println("Worker thread cnt: {}", thread_cnt);
 		fmt::println("Password: {}", password);
 		fmt::println("Time cost: {} ms", time_cost_ms);
-		uint64_t try_cnt = index_when_found - start_index_when_found;
+		uint64_t try_cnt = (index_when_found - start_index_when_found) * thread_cnt;
 		for(size_t i = options.min_password_len; i < password.length(); i++) {
 			try_cnt += pow(options.charSet.length(), i);
 		}
