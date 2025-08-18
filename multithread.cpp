@@ -1,17 +1,11 @@
 ﻿#include "multithread.h"
 
-extern bool if_password_found;
-extern std::string password;
-
-extern uint64_t start_index_when_found;
-extern uint64_t end_index_when_found;
-extern uint64_t index_when_found;
 
 void thread_worker_function(
 	int thread_id,
 	int thread_cnt,
 	SharedResources shared_resources,
-	Options & options
+	Options options
 )
 {
 	if(if_password_found) {
@@ -49,7 +43,7 @@ void thread_worker_function(
 		return;
 	}
 	
-	char * try_password = (char *)_malloca(options.max_password_len + 1);
+	char * try_password = (char *)_malloca(options.maxPasswordLen + 1);
 	if(try_password == nullptr) {
 		return;
 	}
@@ -58,22 +52,16 @@ void thread_worker_function(
 		_freea(try_password);
 		return;
 	}
+
 	auto char_set_len = options.charSet.length();
-	for(int password_len = options.min_password_len;
-		password_len <= options.max_password_len;
+	for(int password_len = options.minPasswordLen;
+		password_len <= options.maxPasswordLen;
 		++password_len) {
 		if(if_password_found) {
 			break;
 		}
-		auto index_range = init_index_range(
-			thread_id,
-			thread_cnt,
-			char_set_len,
-			password_len
-		);
-		auto start_index = index_range.first;
-		auto end_index = index_range.second;
-		for(uint64_t index = start_index; index < end_index; ++index) {
+		uint64_t index_max = pow(char_set_len, password_len);
+		for(uint64_t index = thread_id; index < index_max; index += thread_cnt) {
 			if(if_password_found) {
 				break;
 			}
@@ -85,20 +73,10 @@ void thread_worker_function(
 				try_password
 			);
 			if(file != nullptr) {
-				fmt::println("Trying password: {}", try_password);
 				auto read_cnt = zip_fread(file, file_data, file_stat.size);
 				auto file_err_zip = zip_file_get_error(file)->zip_err;
 				auto file_err_sys = zip_file_get_error(file)->sys_err;
 				int file_err_code = file_err_zip + file_stat.size - read_cnt;
-				fmt::println("File err: {} {}", file_err_zip, file_err_sys);
-				if(read_cnt > 0) {
-					fmt::print("Data:");
-					for(size_t i = 0; i < read_cnt; ++i) {
-						fmt::print(" [{}]", file_data[i]);
-					}
-					fmt::print("\n");
-				}
-				fmt::println("Read cnt: {}", read_cnt);
 				zip_file_error_clear(file);
 				zip_fclose(file);
 				if(file_err_code != 0) {
@@ -111,8 +89,6 @@ void thread_worker_function(
 				}
 				if(try_password != nullptr) {
 					password = try_password;
-					start_index_when_found = start_index;
-					end_index_when_found = end_index;
 					index_when_found = index;
 					if_password_found = true;
 					break;
@@ -128,6 +104,7 @@ void thread_worker_function(
 				}
 			}
 			zip_error_clear(zip_archive.Get());
+			index_observed = index;
 		}
 	}
 	_freea(try_password);
@@ -157,26 +134,9 @@ void generate_password(
 	try_password[password_len] = '\0';
 }
 
-std::pair<uint64_t, uint64_t> init_index_range(
-	int thread_id,
-	int thread_cnt,
-	int char_set_len,
-	int password_len
-)
-{
-	uint64_t max_index = pow(char_set_len, password_len);
-	uint64_t first = max_index * thread_id / thread_cnt;
-	uint64_t second = max_index;
-	if(thread_id + 1 < thread_cnt) {
-		second = max_index * (thread_id + 1) / thread_cnt;
-	}
-	return {first, second};
-}
-
 bool check_crc32(const uint8_t * file_data, zip_uint32_t crc, zip_uint64_t data_len)
 {
 	uint32_t data_crc = crc32(0L, Z_NULL, 0);
 	data_crc = crc32(data_crc, file_data, data_len);
-	fmt::println("Data crc: {:X}, expected crc: {:X}", data_crc, crc);
 	return data_crc == crc;
 }

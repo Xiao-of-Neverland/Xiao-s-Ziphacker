@@ -6,12 +6,25 @@
 #include <cmath>
 #include <zlib.h>
 
+
+//定义全局变量
+
+//找到的密码
+inline std::string password("");
+//是否找到密码
+inline bool if_password_found = false;
+//观察当前尝试索引，用于在主线程中生成进度条
+inline uint64_t index_observed = 0;
+//成功找到密码时的当前尝试索引，用于在主线程中统计性能
+inline uint64_t index_when_found = 0; 
+
+
 //线程工作函数
 void thread_worker_function(
 	int thread_id,
 	int thread_cnt,
 	SharedResources shared_resources,
-	Options & options
+	Options options
 );
 
 //-- 需要极限优化性能 --
@@ -22,14 +35,6 @@ void generate_password(
 	const size_t & char_set_len,
 	const int & password_len,
 	char * try_password
-);
-
-//初始化对应密码长度和线程id的index范围（左闭右开区间）
-std::pair<uint64_t, uint64_t> init_index_range(
-	int thread_id,
-	int thread_cnt,
-	int char_set_len,
-	int password_len
 );
 
 //对于极小文件，验证解密后数据的CRC32，判断尝试的密码是否正确

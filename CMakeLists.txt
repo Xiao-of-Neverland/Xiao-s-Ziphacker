@@ -16,7 +16,7 @@ find_package(libzip REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 17)
 
-add_executable (main
+add_executable (XZP
 	"main.cpp"
 	"PreValidation.cu"
 	"resources.h"
@@ -29,7 +29,7 @@ add_executable (main
 
 set_source_files_properties("PreValidation.cu" PROPERTIES LANGUAGE CUDA)
 
-target_link_libraries(main
+target_link_libraries(XZP
 	PRIVATE
 		fmt::fmt
 		ZLIB::ZLIB

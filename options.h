@@ -15,8 +15,9 @@ struct Options
 	bool isValid = false;
 	std::filesystem::path targetPath;
 	std::string charSet;
-	int min_password_len = 0;
-	int max_password_len = 0;
+	int minPasswordLen = 0;
+	int maxPasswordLen = 0;
+	int threadCnt = 0;
 };
 
 

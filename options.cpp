@@ -11,6 +11,7 @@ Options init_options(int & argc, char * argv[])
 	bool if_allocate_charset = false;
 	bool if_allocate_path = false;
 	bool if_allocate_range = false;
+	bool if_allocate_thread = false;
 
 	bool if_have_numbers = false;
 	bool if_have_uppers = false;
@@ -21,7 +22,7 @@ Options init_options(int & argc, char * argv[])
 		if(arg == "-h" || arg == "-H") {
 			print_help();
 			return options;
-		} if(arg == "-n" || arg == "-N") {
+		} else if(arg == "-n" || arg == "-N") {
 			if_have_numbers = true;
 			if_allocate_charset = true;
 		} else if(arg == "-u" || arg == "-U") {
@@ -60,9 +61,29 @@ Options init_options(int & argc, char * argv[])
 			if(password_len_pair.first < 1) {
 				return options;
 			}
-			options.min_password_len = password_len_pair.first;
-			options.max_password_len = password_len_pair.second;
+			options.minPasswordLen = password_len_pair.first;
+			options.maxPasswordLen = password_len_pair.second;
 			if_allocate_range = true;
+		} else if(arg == "-c" || arg == "-C") {
+			if(if_allocate_thread) {
+				fmt::println("-- Error: Multiple allocate thread cnt --");
+				return options;
+			}
+			if(i + 1 >= argc) {
+				fmt::println("-- Error: Invalid arguments, need thread cnt --");
+				return options;
+			}
+			++i;
+			std::string_view arg1 = argv[i];
+			int cnt = 0;
+			auto result1 = std::from_chars(arg1.data(), arg1.data() + arg1.size(), cnt);
+			if(result1.ec != std::errc{} || cnt <= 0) {
+				fmt::println("-- Error: Invalid thread cnt --");
+				return options;
+			} else {
+				options.threadCnt = cnt;
+				if_allocate_thread = true;
+			}
 		} else {
 			fmt::println("-- Warnning: Ignore invalid parameter \"{}\"", arg);
 		}
@@ -97,7 +118,8 @@ Options init_options(int & argc, char * argv[])
 
 void print_help()
 {
-	fmt::println("usage: XZP.exe [char set option(s)] [target path] [password len range]\n");
+	fmt::print("usage: XZP.exe [char set option(s)] [target path] [password len range]");
+	fmt::println(" [thread cnt](optional)\n");
 
 	fmt::println("char set option(s):");
 	fmt::println("\t[-n | -N]\tadd all numbers to char set");
@@ -108,13 +130,19 @@ void print_help()
 	fmt::println("target path:");
 	fmt::println("\t[-t | -T]\ttell prog to get target path");
 	fmt::println("\t[PATH | \"PATH\"]\ttarget path, have to be exist, valid and end with \".zip\"");
-	fmt::println("[-t | -T] must be followed with [PATH | \"PATH\"], both need one and only one\n");
+	fmt::println("[-t | -T] must be followed by [PATH | \"PATH\"], both need one and only one\n");
 
 	fmt::println("password len range:");
 	fmt::println("\t[-r | -R]\ttell prog to get password len range");
 	fmt::println("\t[RANGE]\tpassword len range, have to be two positove int, example:");
 	fmt::println("\t\t\t[MIN,MAX] [MIN MAX] [MIN-MAX]");
-	fmt::println("[-r | -R] must be followed with [RANGE], both need one and only one\n");
+	fmt::println("[-r | -R] must be followed by [RANGE], both need one and only one\n");
+
+	fmt::println("thread cnt:");
+	fmt::println("\t[-c | -C]\ttell prog to get thread cnt");
+	fmt::println("\t[CNT]\tworker thread cnt, have to be positove int");
+	fmt::println("[-c | -C] must be followed by [CNT], IF GIVED, both need one and only one");
+	fmt::println("[thread cnt] is optional, if not gived, prog will set it automatically\n");
 
 	fmt::println("full example: XZP.exe -t \"D:\\test.zip\" -n -u -l -r 1,4");
 }
@@ -171,7 +199,6 @@ std::pair<int, int> init_password_len_range(size_t & i, int & argc, char * argv[
 	std::string_view arg1 = argv[i];
 	auto pos_sep = arg1.find_first_of(",-");
 	if(pos_sep != std::string_view::npos) {
-		++i;
 		auto result1 = std::from_chars(arg1.data(), arg1.data() + pos_sep, first);
 		auto result2 = std::from_chars(arg1.data() + pos_sep + 1, arg1.data() + arg1.size(), second);
 		if(result1.ec != std::errc{} || result2.ec != std::errc{}) {
@@ -180,7 +207,7 @@ std::pair<int, int> init_password_len_range(size_t & i, int & argc, char * argv[
 		}
 	} else if(i + 2 <= argc) {
 		std::string_view arg2 = argv[i + 1];
-		i += 2;
+		++i;
 		auto result1 = std::from_chars(arg1.data(), arg1.data() + arg1.size(), first);
 		auto result2 = std::from_chars(arg2.data(), arg2.data() + arg2.size(), second);
 		if(result1.ec != std::errc{} || result2.ec != std::errc{}) {
