@@ -13,8 +13,10 @@
 inline std::string password("");
 //是否找到密码
 inline bool if_password_found = false;
+//观察当前尝试密码长度，用于在主线程中生成进度条
+inline int password_len_ob = 0;
 //观察当前尝试索引，用于在主线程中生成进度条
-inline uint64_t index_observed = 0;
+inline uint64_t index_ob = 0;
 //成功找到密码时的当前尝试索引，用于在主线程中统计性能
 inline uint64_t index_when_found = 0; 
 

@@ -1,7 +1,4 @@
-﻿#include "options.h"
-#include "resources.h"
-#include "multithread.h"
-#include <chrono>
+﻿#include "main.h"
 
 
 int main(int argc, char * argv[])
@@ -20,14 +17,14 @@ int main(int argc, char * argv[])
 		}
 	} else {
 		fmt::println("Need options, use '-h' to get help info");
-		return 1;
+		//return 1;
 		//开发调试用
-		//options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao's Ziphacker\\test.zip");
-		//options.charSet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-		//options.minPasswordLen = 1;
-		//options.maxPasswordLen = 4;
-		//options.threadCnt = 4;
-		//options.isValid = true;
+		options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao's Ziphacker\\test.zip");
+		options.charSet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		options.minPasswordLen = 1;
+		options.maxPasswordLen = 4;
+		options.threadCnt = 1;
+		options.isValid = true;
 	}
 	
 	auto timer_start = std::chrono::high_resolution_clock::now();
@@ -56,16 +53,31 @@ int main(int argc, char * argv[])
 	}
 
 	for(auto & worker_thread : worker_threads) {
-		worker_thread.join();
+		worker_thread.detach();
 	}
+
+	uint64_t try_cnt_max = 0;
+	for(size_t i = options.minPasswordLen; i <= options.maxPasswordLen; ++i) {
+		try_cnt_max += pow(options.charSet.length(), i);
+	}
+	do {
+		uint64_t try_cnt_ob = index_ob;
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		for(size_t i = options.minPasswordLen; i < password_len_ob; ++i) {
+			try_cnt_ob += pow(options.charSet.length(), i);
+		}
+		if(try_cnt_ob >= (try_cnt_max - thread_cnt - 1)) {
+			break;
+		}
+		show_progress(try_cnt_ob, try_cnt_max);
+	} while(!if_password_found);
+	fmt::print("\n");
 
 	auto timer_end = std::chrono::high_resolution_clock::now();
 
 	auto time_cost_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
 		timer_end - timer_start
 	).count();
-
-	fmt::println("Worker thread cnt: {}", thread_cnt);
 
 	int password_len_all_try = options.maxPasswordLen;
 	uint64_t try_cnt = index_when_found;
@@ -91,7 +103,22 @@ int main(int argc, char * argv[])
 	return 0;
 }
 
-void show_progress()
+void show_progress(uint64_t try_cnt_ob, uint64_t try_cnt_max, int bar_width)
 {
-	float percentage = (float)(1);
+	float percentage = (float)try_cnt_ob / try_cnt_max * 100;
+	if(percentage > 100.0) {
+		percentage = 100;
+	}
+	int bar_filled = bar_width * try_cnt_ob / try_cnt_max;
+	std::string bar(bar_width, ' ');
+	for(size_t i = 0; i < bar_width; ++i) {
+		if(i < bar_filled) {
+			bar.at(i) = '=';
+		}
+	}
+	//no bug with cout
+	std::cout << "\r[" << bar << "] " << int(percentage) << '%';
+	//bug with fmt
+	//std::cout << fmt::format("\r[{}] {:.0f}%\n", bar, percentage);
+	std::cout.flush();
 }

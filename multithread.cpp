@@ -8,6 +8,8 @@ void thread_worker_function(
 	Options options
 )
 {
+	fmt::println("Thread id: {} running...", thread_id);
+
 	if(if_password_found) {
 		return;
 	}
@@ -32,7 +34,6 @@ void thread_worker_function(
 		zip_stat_index(zip_archive.Get(), i, 0, &file_stat);
 		if(file_stat.valid & ZIP_STAT_ENCRYPTION_METHOD) {
 			if(file_stat.encryption_method != ZIP_EM_NONE) {
-				fmt::println("Try file: {}", file_stat.name);
 				encrypted_file_index = i;
 				break;
 			}
@@ -104,7 +105,10 @@ void thread_worker_function(
 				}
 			}
 			zip_error_clear(zip_archive.Get());
-			index_observed = index;
+			if(index % 10000 == 0 && 0 == thread_id) {
+				password_len_ob = password_len;
+				index_ob = index;
+			}
 		}
 	}
 	_freea(try_password);

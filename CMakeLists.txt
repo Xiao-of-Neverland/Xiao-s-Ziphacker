@@ -16,7 +16,12 @@ find_package(libzip REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 17)
 
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries" FORCE)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+set(CMAKE_CUDA_RUNTIME_LIBRARY Static)
+
 add_executable (XZP
+	"main.h"
 	"main.cpp"
 	"PreValidation.cu"
 	"resources.h"
@@ -34,4 +39,5 @@ target_link_libraries(XZP
 		fmt::fmt
 		ZLIB::ZLIB
 		libzip::zip
+		cudart_static
 )
