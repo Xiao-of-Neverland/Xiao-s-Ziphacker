@@ -3,6 +3,7 @@
 
 int main(int argc, char * argv[])
 {
+	//初始化参数
 	Options options;
 	if(argc > 1) {
 		options = init_options(argc, argv);
@@ -18,15 +19,16 @@ int main(int argc, char * argv[])
 	} else {
 		fmt::println("Need options, use '-h' to get help info");
 		//return 1;
-		//开发调试用
+		//debug options
 		options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao's Ziphacker\\test.zip");
-		options.charSet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		options.charSet.append(numbers).append(uppers).append(lowers);
 		options.minPasswordLen = 1;
 		options.maxPasswordLen = 4;
-		options.threadCnt = 1;
+		options.threadCnt = 10;
 		options.isValid = true;
 	}
 	
+	//记录启动时间
 	auto timer_start = std::chrono::high_resolution_clock::now();
 	int thread_cnt = options.threadCnt;
 	if(thread_cnt == 0) {
@@ -39,8 +41,10 @@ int main(int argc, char * argv[])
 		}
 	}
 
+	//初始化线程共享资源
 	auto shared_resources = init_shared_resources(options.targetPath.generic_string());
 
+	//创建线程
 	std::vector<std::thread> worker_threads;
 	for(int thread_id = 0; thread_id < thread_cnt; ++thread_id) {
 		worker_threads.emplace_back(
@@ -52,10 +56,7 @@ int main(int argc, char * argv[])
 		);
 	}
 
-	for(auto & worker_thread : worker_threads) {
-		worker_thread.detach();
-	}
-
+	//打印进度条。包含任务终止判定
 	uint64_t try_cnt_max = 0;
 	for(size_t i = options.minPasswordLen; i <= options.maxPasswordLen; ++i) {
 		try_cnt_max += pow(options.charSet.length(), i);
@@ -66,19 +67,25 @@ int main(int argc, char * argv[])
 		for(size_t i = options.minPasswordLen; i < password_len_ob; ++i) {
 			try_cnt_ob += pow(options.charSet.length(), i);
 		}
-		if(try_cnt_ob >= (try_cnt_max - thread_cnt - 1)) {
+		show_progress(try_cnt_ob, try_cnt_max);
+		if(try_cnt_ob >= try_cnt_max) {
 			break;
 		}
-		show_progress(try_cnt_ob, try_cnt_max);
 	} while(!if_password_found);
 	fmt::print("\n");
 
-	auto timer_end = std::chrono::high_resolution_clock::now();
+	//等待线程终止
+	for(auto & worker_thread : worker_threads) {
+		worker_thread.join();
+	}
 
+	//记录终止时间
+	auto timer_end = std::chrono::high_resolution_clock::now();
 	auto time_cost_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
 		timer_end - timer_start
 	).count();
 
+	//计算破解速度
 	int password_len_all_try = options.maxPasswordLen;
 	uint64_t try_cnt = index_when_found;
 	if(if_password_found) {
@@ -89,11 +96,13 @@ int main(int argc, char * argv[])
 		try_cnt += pow(options.charSet.length(), i);
 	}
 
+	//输出破解速度
 	fmt::println("Time cost: {} ms", time_cost_ms);
 	fmt::println("Count of try passwords: {}", try_cnt);
 	double trys_per_sec = try_cnt / ((double)time_cost_ms / 1000);
 	fmt::println("Count of trys per sec: {:.0f}", trys_per_sec);
 
+	//输出是否破解成功及破解密码
 	if(if_password_found) {
 		fmt::println("Password found: \"{}\"", password);
 	} else {

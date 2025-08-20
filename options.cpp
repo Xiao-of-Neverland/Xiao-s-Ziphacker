@@ -1,8 +1,5 @@
 ﻿#include "options.h"
 
-std::string numbers = "0123456789";
-std::string uppers = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-std::string lowers = "abcdefghijklmnopqrstuvwxyz";
 
 Options init_options(int & argc, char * argv[])
 {

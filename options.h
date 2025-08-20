@@ -8,6 +8,10 @@
 #include <fmt/core.h>
 #include <Windows.h>
 
+//字符集
+inline std::string numbers = "0123456789";
+inline std::string uppers = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+inline std::string lowers = "abcdefghijklmnopqrstuvwxyz";
 
 //结构体：用户输入参数
 struct Options

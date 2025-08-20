@@ -111,6 +111,9 @@ void thread_worker_function(
 			}
 		}
 	}
+	if(!if_password_found) {
+		index_ob = pow(char_set_len, options.maxPasswordLen);
+	}
 	_freea(try_password);
 	_freea(file_data);
 }
