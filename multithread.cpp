@@ -44,6 +44,7 @@ void thread_worker_function(
 		return;
 	}
 	
+	//初始化内存资源
 	char * try_password = (char *)_malloca(options.maxPasswordLen + 1);
 	if(try_password == nullptr) {
 		return;
@@ -53,6 +54,10 @@ void thread_worker_function(
 		_freea(try_password);
 		return;
 	}
+
+	std::ofstream out_file;
+	out_file.open(fmt::format("data {}.csv", thread_id), std::ios::out | std::ios::trunc);
+	out_file << "read_cnt," << std::endl;
 
 	auto char_set_len = options.charSet.length();
 	for(int password_len = options.minPasswordLen;
@@ -75,6 +80,9 @@ void thread_worker_function(
 			);
 			if(file != nullptr) {
 				auto read_cnt = zip_fread(file, file_data, file_stat.size);
+				if(read_cnt > 0) {
+					out_file << read_cnt << ',' << std::endl;
+				}
 				auto file_err_zip = zip_file_get_error(file)->zip_err;
 				auto file_err_sys = zip_file_get_error(file)->sys_err;
 				int file_err_code = file_err_zip + file_stat.size - read_cnt;
@@ -105,7 +113,7 @@ void thread_worker_function(
 				}
 			}
 			zip_error_clear(zip_archive.Get());
-			if(index % 10000 == 0 && 0 == thread_id) {
+			if(index % 1000 == 0 && 0 == thread_id) {
 				password_len_ob = password_len;
 				index_ob = index;
 			}
@@ -114,6 +122,7 @@ void thread_worker_function(
 	if(!if_password_found) {
 		index_ob = pow(char_set_len, options.maxPasswordLen);
 	}
+	out_file.close();
 	_freea(try_password);
 	_freea(file_data);
 }

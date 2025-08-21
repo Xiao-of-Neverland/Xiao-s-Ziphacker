@@ -5,6 +5,7 @@
 #include <thread>
 #include <cmath>
 #include <zlib.h>
+#include <fstream>
 
 
 //定义全局变量

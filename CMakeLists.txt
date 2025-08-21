@@ -9,16 +9,16 @@ enable_language(CUDA)
 
 include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
-find_package(fmt REQUIRED)
-find_package(ZLIB REQUIRED)
-find_package(libzip REQUIRED)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 17)
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries" FORCE)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set(CMAKE_CUDA_RUNTIME_LIBRARY Static)
+
+find_package(fmt REQUIRED CONFIG)
+find_package(ZLIB REQUIRED)
+find_package(libzip REQUIRED CONFIG)
 
 add_executable (XZP
 	"main.h"
@@ -30,6 +30,10 @@ add_executable (XZP
 	"multithread.cpp"
 	"options.h"
 	"options.cpp"
+)
+
+set_target_properties(XZP PROPERTIES
+	MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
 )
 
 set_source_files_properties("PreValidation.cu" PROPERTIES LANGUAGE CUDA)
