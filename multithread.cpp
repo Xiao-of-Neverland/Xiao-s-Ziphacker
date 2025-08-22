@@ -34,6 +34,12 @@ void thread_worker_function(
 		zip_stat_index(zip_archive.Get(), i, 0, &file_stat);
 		if(file_stat.valid & ZIP_STAT_ENCRYPTION_METHOD) {
 			if(file_stat.encryption_method != ZIP_EM_NONE) {
+				fmt::println(
+					"File name:{} ,Comp method:{} , Encryp method:{}",
+					file_stat.name,
+					file_stat.comp_method,
+					file_stat.encryption_method
+				);
 				encrypted_file_index = i;
 				break;
 			}
@@ -57,7 +63,7 @@ void thread_worker_function(
 
 	std::ofstream out_file;
 	out_file.open(fmt::format("data {}.csv", thread_id), std::ios::out | std::ios::trunc);
-	out_file << "read_cnt," << std::endl;
+	out_file << "try_password, " << "read_cnt," << std::endl;
 
 	auto char_set_len = options.charSet.length();
 	for(int password_len = options.minPasswordLen;
@@ -81,7 +87,7 @@ void thread_worker_function(
 			if(file != nullptr) {
 				auto read_cnt = zip_fread(file, file_data, file_stat.size);
 				if(read_cnt > 0) {
-					out_file << read_cnt << ',' << std::endl;
+					out_file << try_password << ", " << read_cnt << ',' << std::endl;
 				}
 				auto file_err_zip = zip_file_get_error(file)->zip_err;
 				auto file_err_sys = zip_file_get_error(file)->sys_err;
@@ -91,10 +97,8 @@ void thread_worker_function(
 				if(file_err_code != 0) {
 					continue;
 				}
-				if(read_cnt < 1024) {
-					if(!check_crc32(file_data, file_stat.crc, read_cnt)) {
-						continue;
-					}
+				if(!check_crc32(file_data, file_stat.crc, read_cnt)) {
+					continue;
 				}
 				if(try_password != nullptr) {
 					password = try_password;

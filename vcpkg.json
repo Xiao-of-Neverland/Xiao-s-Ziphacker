@@ -1,7 +1,8 @@
-{
+﻿{
 	"dependencies": [
 		"fmt",
 		"zlib",
-		"libzip"
+		"libzip",
+		"libmagic"
 	]
 }

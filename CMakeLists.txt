@@ -1,9 +1,9 @@
-﻿# CMakeList.txt: Xiao's Ziphacker 的 CMake 项目，在此处包括源代码并定义
+﻿# CMakeList.txt: Xiao-s-Ziphacker 的 CMake 项目，在此处包括源代码并定义
 # 项目特定的逻辑。
 #
 cmake_minimum_required (VERSION 3.20)
 
-project ("Xiao's Ziphacker" LANGUAGES CXX CUDA)
+project ("Xiao-s-Ziphacker" LANGUAGES CXX CUDA)
 
 enable_language(CUDA)
 
@@ -12,13 +12,17 @@ include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 17)
 
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries" FORCE)
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-set(CMAKE_CUDA_RUNTIME_LIBRARY Static)
+set(CMAKE_CUDA_RUNTIME_LIBRARY)
 
-find_package(fmt REQUIRED CONFIG)
+find_package(fmt REQUIRED )
 find_package(ZLIB REQUIRED)
-find_package(libzip REQUIRED CONFIG)
+find_package(libzip REQUIRED)
+find_library(MAGIC_LIBRARY NAMES magic libmagic)
+find_path(MAGIC_INCLUDE_DIR NAMES magic.h)
+
+if(NOT MAGIC_LIBRARY OR NOT MAGIC_INCLUDE_DIR)
+    message(FATAL_ERROR "libmagic not found. Ensure it is installed via vcpkg.")
+endif()
 
 add_executable (XZP
 	"main.h"
@@ -32,16 +36,14 @@ add_executable (XZP
 	"options.cpp"
 )
 
-set_target_properties(XZP PROPERTIES
-	MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
-)
-
 set_source_files_properties("PreValidation.cu" PROPERTIES LANGUAGE CUDA)
+
+target_include_directories(XZP PRIVATE ${MAGIC_INCLUDE_DIR})
 
 target_link_libraries(XZP
 	PRIVATE
 		fmt::fmt
 		ZLIB::ZLIB
 		libzip::zip
-		cudart_static
+		${MAGIC_LIBRARY}
 )

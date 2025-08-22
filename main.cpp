@@ -24,7 +24,7 @@ int main(int argc, char * argv[])
 		options.charSet.append(numbers).append(uppers).append(lowers);
 		options.minPasswordLen = 1;
 		options.maxPasswordLen = 4;
-		options.threadCnt = 10;
+		options.threadCnt = 1;
 		options.isValid = true;
 	}
 	
