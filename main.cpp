@@ -20,7 +20,7 @@ int main(int argc, char * argv[])
 		fmt::println("Need options, use '-h' to get help info");
 		//return 1;
 		//debug options
-		options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao's Ziphacker\\test.zip");
+		options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao-s-Ziphacker\\test.zip");
 		options.charSet.append(numbers).append(uppers).append(lowers);
 		options.minPasswordLen = 1;
 		options.maxPasswordLen = 4;
