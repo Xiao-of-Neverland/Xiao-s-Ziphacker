@@ -30,6 +30,8 @@ int main(int argc, char * argv[])
 	
 	//记录启动时间
 	auto timer_start = std::chrono::high_resolution_clock::now();
+
+	//初始化线程数量
 	int thread_cnt = options.threadCnt;
 	if(thread_cnt == 0) {
 		auto logical_processor_cnt = std::thread::hardware_concurrency();
@@ -37,12 +39,48 @@ int main(int argc, char * argv[])
 			thread_cnt = (logical_processor_cnt + 1) / 2;
 		} else {
 			thread_cnt = 1;
-			fmt::println("Warnning: Can't get count of logical processor. Using only ONE thread");
+			fmt::println("-- Warnning: Can't get count of logical processor --");
 		}
 	}
 
 	//初始化线程共享资源
 	auto shared_resources = init_shared_resources(options.targetPath.generic_string());
+
+	//初始化zip文档
+	auto zip_archive = init_zip_archive(shared_resources);
+	if(!zip_archive.IsValid()) {
+		fmt::println("-- Error: Failed to open ZIP archive --");
+		return 1;
+	}
+
+	//检查zip文档内文件条目
+	auto zip_entries_cnt = zip_get_num_entries(zip_archive.Get(), 0);
+	if(zip_entries_cnt < 1) {
+		fmt::println("-- Error: ZIP archive have no file --");
+		return;
+	}
+	zip_uint64_t encrypted_file_index = -1;
+	zip_stat_t file_stat;
+	zip_stat_init(&file_stat);
+	for(size_t i = 0; i < zip_entries_cnt; ++i) {
+		zip_stat_index(zip_archive.Get(), i, 0, &file_stat);
+		if(file_stat.valid & ZIP_STAT_ENCRYPTION_METHOD) {
+			if(file_stat.encryption_method != ZIP_EM_NONE) {
+				fmt::println(
+					"File name:{} ,Comp method:{} , Encryp method:{}",
+					file_stat.name,
+					file_stat.comp_method,
+					file_stat.encryption_method
+				);
+				encrypted_file_index = i;
+				break;
+			}
+		}
+	}
+	if(encrypted_file_index == -1) {
+		fmt::println("-- Error: ZIP archive have no encrypted file --");
+		return 1;
+	}
 
 	//创建线程
 	std::vector<std::thread> worker_threads;
@@ -68,7 +106,7 @@ int main(int argc, char * argv[])
 			try_cnt_ob += pow(options.charSet.length(), i);
 		}
 		show_progress(try_cnt_ob, try_cnt_max);
-		if(try_cnt_ob >= try_cnt_max) {
+		if(shared_resources.pMapView.use_count() < 1) {
 			break;
 		}
 	} while(!if_password_found);

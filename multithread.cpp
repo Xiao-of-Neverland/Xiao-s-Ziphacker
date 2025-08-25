@@ -160,3 +160,53 @@ bool check_crc32(const uint8_t * file_data, zip_uint32_t crc, zip_uint64_t data_
 	data_crc = crc32(data_crc, file_data, data_len);
 	return data_crc == crc;
 }
+
+FileType get_expected_file_type(const char * file_name)
+{
+	std::string_view name_str(file_name);
+	auto dot_pos = name_str.find_last_of('.');
+	if(dot_pos == std::string_view::npos || dot_pos == name_str.length() - 1) {
+		return FileType::UNSUPPORTED;
+	}
+	std::string extension_str(name_str.substr(dot_pos + 1));
+	std::transform(extension_str.begin(), extension_str.end(), extension_str.begin(), ::tolower);
+
+	auto type_it = extension_to_type.find(extension_str);
+	if(type_it == extension_to_type.end()) {
+		return FileType::UNSUPPORTED;
+	} else {
+		return type_it->second;
+	}
+}
+
+bool check_magic(const uint8_t * file_data, zip_uint64_t data_len, FileType expected_type)
+{
+	magic_t magic_set = magic_open(MAGIC_MIME_TYPE | MAGIC_ERROR);
+	if(magic_set == nullptr) {
+		fmt::println("Error: Failed to init libmagic");
+		return false;
+	}
+	if(magic_load(magic_set, nullptr) != 0) {
+		fmt::println("Error: Failed to load magic database: {}", magic_error(magic_set));
+		magic_close(magic_set);
+		return false;
+	}
+
+	const char * mime = magic_buffer(magic_set, file_data, data_len);
+	if(mime == nullptr) {
+		magic_close(magic_set);
+		return false;
+	}
+
+	std::string mime_str(mime);
+	auto type_it = mime_to_type.find(mime_str);
+	if(type_it == mime_to_type.end()) {
+		return false;
+	}
+
+	if(type_it->second == expected_type) {
+		return true;
+	} else {
+		return false;
+	}
+}

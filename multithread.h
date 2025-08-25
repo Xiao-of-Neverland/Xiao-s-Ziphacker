@@ -7,6 +7,7 @@
 #include <zlib.h>
 #include <fstream>
 #include <map>
+#include <magic.h>
 
 
 //定义全局变量
@@ -27,7 +28,7 @@ inline uint64_t index_when_found = 0;
 enum class FileType
 {
 	//未知或不支持的类型
-	UNSUPPORTED,
+	UNSUPPORTED = 0,
 	//图片文件
 	JPEG, PNG, GIF, BMP, TIFF, WEBP,
 	//音频文件
