@@ -57,7 +57,7 @@ int main(int argc, char * argv[])
 	auto zip_entries_cnt = zip_get_num_entries(zip_archive.Get(), 0);
 	if(zip_entries_cnt < 1) {
 		fmt::println("-- Error: ZIP archive have no file --");
-		return;
+		return 1;
 	}
 	zip_uint64_t encrypted_file_index = -1;
 	zip_stat_t file_stat;
@@ -90,6 +90,7 @@ int main(int argc, char * argv[])
 			thread_id,
 			thread_cnt,
 			shared_resources,
+			encrypted_file_index,
 			options
 		);
 	}

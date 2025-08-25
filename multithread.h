@@ -12,6 +12,8 @@
 
 //定义全局变量
 
+constexpr inline uint64_t read_cnt_max = 1024;
+
 //找到的密码
 inline std::string password("");
 //是否找到密码
@@ -115,9 +117,10 @@ static const std::map<std::string, FileType> mime_to_type = {
 
 //线程工作函数
 void thread_worker_function(
-	int thread_id,
-	int thread_cnt,
-	SharedResources shared_resources,
+    int thread_id,
+    int thread_cnt,
+    SharedResources shared_resources,
+    zip_uint64_t file_index,
 	Options options
 );
 

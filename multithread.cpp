@@ -5,6 +5,7 @@ void thread_worker_function(
 	int thread_id,
 	int thread_cnt,
 	SharedResources shared_resources,
+	zip_uint64_t file_index,
 	Options options
 )
 {
@@ -20,34 +21,23 @@ void thread_worker_function(
 		return;
 	}
 
-	//-- 需要考虑是否应移动至主线程进行 --
-	//检查zip文档是否可被破解
-	auto zip_entries_cnt = zip_get_num_entries(zip_archive.Get(), 0);
-	if(zip_entries_cnt < 1) {
-		fmt::println("-- Error: ZIP archive have no file --");
-		return;
-	}
-	zip_uint64_t encrypted_file_index = -1;
 	zip_stat_t file_stat;
 	zip_stat_init(&file_stat);
-	for(size_t i = 0; i < zip_entries_cnt; ++i) {
-		zip_stat_index(zip_archive.Get(), i, 0, &file_stat);
-		if(file_stat.valid & ZIP_STAT_ENCRYPTION_METHOD) {
-			if(file_stat.encryption_method != ZIP_EM_NONE) {
-				fmt::println(
-					"File name:{} ,Comp method:{} , Encryp method:{}",
-					file_stat.name,
-					file_stat.comp_method,
-					file_stat.encryption_method
-				);
-				encrypted_file_index = i;
-				break;
+	zip_stat_index(zip_archive.Get(), file_index, 0, &file_stat);
+	auto file_type = get_expected_file_type(file_stat.name);
+	fmt::println("file type: {}", (int)file_type);
+	bool if_need_check_crc = false;
+	bool if_need_check_magic = false;
+	if(file_stat.size <= read_cnt_max) {
+		if_need_check_crc = true;
+	} else {
+		if(file_stat.comp_method == ZIP_CM_STORE) {
+			if(file_type == FileType::UNSUPPORTED) {
+				if_need_check_crc = true;
+			} else {
+				if_need_check_magic = true;
 			}
 		}
-	}
-	if(encrypted_file_index == -1) {
-		fmt::println("-- Error: ZIP archive have no encrypted file --");
-		return;
 	}
 	
 	//初始化内存资源
@@ -55,7 +45,7 @@ void thread_worker_function(
 	if(try_password == nullptr) {
 		return;
 	}
-	uint8_t * file_data = (uint8_t *)_malloca(file_stat.size);
+	uint8_t * file_data = (uint8_t *)_malloca(read_cnt_max);
 	if(file_data == nullptr) {
 		_freea(try_password);
 		return;
@@ -80,25 +70,31 @@ void thread_worker_function(
 			generate_password(index, options.charSet, char_set_len, password_len, try_password);
 			auto file = zip_fopen_index_encrypted(
 				zip_archive.Get(),
-				encrypted_file_index,
+				file_index,
 				0,
 				try_password
 			);
 			if(file != nullptr) {
-				auto read_cnt = zip_fread(file, file_data, file_stat.size);
+				auto read_cnt = zip_fread(file, file_data, read_cnt_max);
 				if(read_cnt > 0) {
 					out_file << try_password << ", " << read_cnt << ',' << std::endl;
 				}
 				auto file_err_zip = zip_file_get_error(file)->zip_err;
 				auto file_err_sys = zip_file_get_error(file)->sys_err;
-				int file_err_code = file_err_zip + file_stat.size - read_cnt;
 				zip_file_error_clear(file);
 				zip_fclose(file);
-				if(file_err_code != 0) {
+				if(file_err_zip + file_err_sys != 0) {
 					continue;
 				}
-				if(!check_crc32(file_data, file_stat.crc, read_cnt)) {
-					continue;
+				if(if_need_check_crc) {
+					if(!check_crc32(file_data, file_stat.crc, read_cnt)) {
+						continue;
+					}
+				}
+				if(if_need_check_magic) {
+					if(!check_magic(file_data, read_cnt, file_type)) {
+						continue;
+					}
 				}
 				if(try_password != nullptr) {
 					password = try_password;
@@ -113,6 +109,7 @@ void thread_worker_function(
 				auto zip_archive_err = zip_get_error(zip_archive.Get());
 				if(zip_error_code_zip(zip_archive_err) != ZIP_ER_WRONGPASSWD) {
 					fmt::println("-- Error: Unknown error while trying password --");
+					fmt::println("{}, {}", zip_archive_err->zip_err, zip_archive_err->sys_err);
 					break;
 				}
 			}
@@ -181,20 +178,20 @@ FileType get_expected_file_type(const char * file_name)
 
 bool check_magic(const uint8_t * file_data, zip_uint64_t data_len, FileType expected_type)
 {
-	magic_t magic_set = magic_open(MAGIC_MIME_TYPE | MAGIC_ERROR);
-	if(magic_set == nullptr) {
+	magic_t magic = magic_open(MAGIC_MIME_TYPE | MAGIC_ERROR);
+	if(magic == nullptr) {
 		fmt::println("Error: Failed to init libmagic");
 		return false;
 	}
-	if(magic_load(magic_set, nullptr) != 0) {
-		fmt::println("Error: Failed to load magic database: {}", magic_error(magic_set));
-		magic_close(magic_set);
+	if(magic_load(magic, nullptr) != 0) {
+		fmt::println("Error: Failed to load magic database: {}", magic_error(magic));
+		magic_close(magic);
 		return false;
 	}
 
-	const char * mime = magic_buffer(magic_set, file_data, data_len);
+	const char * mime = magic_buffer(magic, file_data, data_len);
 	if(mime == nullptr) {
-		magic_close(magic_set);
+		magic_close(magic);
 		return false;
 	}
 
