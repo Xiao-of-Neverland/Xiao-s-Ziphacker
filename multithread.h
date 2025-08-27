@@ -141,5 +141,10 @@ bool check_crc32(const uint8_t * file_data, zip_uint32_t crc, zip_uint64_t data_
 FileType get_expected_file_type(const char * file_name);
 
 //对于以store方式存储的特定类型的较大文件，验证解密后数据的类型对应特征
-bool check_magic(const uint8_t * file_data, zip_uint64_t data_len, FileType expected_type);
+bool check_magic(
+    magic_t magic,
+    const uint8_t * file_data,
+    zip_uint64_t data_len,
+    FileType expected_type
+);
 

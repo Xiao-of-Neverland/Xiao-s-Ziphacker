@@ -105,9 +105,11 @@ int main(int argc, char * argv[])
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		for(size_t i = options.minPasswordLen; i < password_len_ob; ++i) {
 			try_cnt_ob += pow(options.charSet.length(), i);
+		}if(shared_resources.pMapView.use_count() <= 1) {
+			try_cnt_ob = try_cnt_max;
 		}
 		show_progress(try_cnt_ob, try_cnt_max);
-		if(shared_resources.pMapView.use_count() < 1) {
+		if(shared_resources.pMapView.use_count() <= 1) {
 			break;
 		}
 	} while(!if_password_found);
@@ -155,7 +157,7 @@ void show_progress(uint64_t try_cnt_ob, uint64_t try_cnt_max, int bar_width)
 {
 	float percentage = (float)try_cnt_ob / try_cnt_max * 100;
 	if(percentage > 100.0) {
-		percentage = 100;
+		percentage = 100.0;
 	}
 	int bar_filled = bar_width * try_cnt_ob / try_cnt_max;
 	std::string bar(bar_width, ' ');

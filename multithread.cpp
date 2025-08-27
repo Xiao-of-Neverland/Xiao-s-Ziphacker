@@ -1,6 +1,15 @@
 ﻿#include "multithread.h"
 
 
+// 检查宏是否被定义
+#ifndef MAGIC_DB_PATH
+#error "MAGIC_DB_PATH is not defined. Please check your CMakeLists.txt"
+#endif
+
+const char * magic_db_path = MAGIC_DB_PATH;
+
+std::ofstream out_file;
+
 void thread_worker_function(
 	int thread_id,
 	int thread_cnt,
@@ -51,7 +60,24 @@ void thread_worker_function(
 		return;
 	}
 
-	std::ofstream out_file;
+	//初始化libmagic
+	magic_t magic_cookie = nullptr;
+	if(if_need_check_magic) {
+		magic_cookie = magic_open(MAGIC_MIME | MAGIC_ERROR);
+		if(magic_cookie == nullptr) {
+			fmt::println("Error: Failed to init libmagic");
+			return;
+		}
+		fmt::println("{}", magic_db_path);
+		if(magic_load(magic_cookie, magic_db_path) != 0) {
+			auto magic_err = magic_error(magic_cookie);
+			fmt::println("Error: Failed to load magic database: {}", magic_err);
+			magic_close(magic_cookie);
+			return;
+		}
+	}
+
+	
 	out_file.open(fmt::format("data {}.csv", thread_id), std::ios::out | std::ios::trunc);
 	out_file << "try_password, " << "read_cnt," << std::endl;
 
@@ -75,9 +101,10 @@ void thread_worker_function(
 				try_password
 			);
 			if(file != nullptr) {
+				out_file << std::endl;
 				auto read_cnt = zip_fread(file, file_data, read_cnt_max);
 				if(read_cnt > 0) {
-					out_file << try_password << ", " << read_cnt << ',' << std::endl;
+					out_file << try_password << ", " << read_cnt << ',';
 				}
 				auto file_err_zip = zip_file_get_error(file)->zip_err;
 				auto file_err_sys = zip_file_get_error(file)->sys_err;
@@ -92,7 +119,7 @@ void thread_worker_function(
 					}
 				}
 				if(if_need_check_magic) {
-					if(!check_magic(file_data, read_cnt, file_type)) {
+					if(!check_magic(magic_cookie, file_data, read_cnt, file_type)) {
 						continue;
 					}
 				}
@@ -114,7 +141,7 @@ void thread_worker_function(
 				}
 			}
 			zip_error_clear(zip_archive.Get());
-			if(index % 1000 == 0 && 0 == thread_id) {
+			if(0 == thread_id) {
 				password_len_ob = password_len;
 				index_ob = index;
 			}
@@ -176,19 +203,13 @@ FileType get_expected_file_type(const char * file_name)
 	}
 }
 
-bool check_magic(const uint8_t * file_data, zip_uint64_t data_len, FileType expected_type)
+bool check_magic(
+	magic_t magic,
+	const uint8_t * file_data,
+	zip_uint64_t data_len,
+	FileType expected_type
+)
 {
-	magic_t magic = magic_open(MAGIC_MIME_TYPE | MAGIC_ERROR);
-	if(magic == nullptr) {
-		fmt::println("Error: Failed to init libmagic");
-		return false;
-	}
-	if(magic_load(magic, nullptr) != 0) {
-		fmt::println("Error: Failed to load magic database: {}", magic_error(magic));
-		magic_close(magic);
-		return false;
-	}
-
 	const char * mime = magic_buffer(magic, file_data, data_len);
 	if(mime == nullptr) {
 		magic_close(magic);
@@ -196,6 +217,11 @@ bool check_magic(const uint8_t * file_data, zip_uint64_t data_len, FileType expe
 	}
 
 	std::string mime_str(mime);
+	auto semicolon_pos = mime_str.find(';');
+	if(semicolon_pos != std::string::npos) {
+		mime_str = mime_str.substr(0, semicolon_pos);
+	}
+	out_file << mime_str << ',';
 	auto type_it = mime_to_type.find(mime_str);
 	if(type_it == mime_to_type.end()) {
 		return false;

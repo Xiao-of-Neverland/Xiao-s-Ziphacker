@@ -3,6 +3,9 @@
 		"fmt",
 		"zlib",
 		"libzip",
-		"libmagic"
+		{
+			"name": "libmagic",
+			"platform": "windows"
+		}
 	]
 }
