@@ -13,6 +13,7 @@ Options init_options(int & argc, char * argv[])
 	bool if_have_numbers = false;
 	bool if_have_uppers = false;
 	bool if_have_lowers = false;
+	bool if_have_signs = false;
 
 	for(size_t i = 1; i < argc; ++i) {
 		std::string_view arg(argv[i]);
@@ -27,6 +28,9 @@ Options init_options(int & argc, char * argv[])
 			if_allocate_charset = true;
 		} else if(arg == "-l" || arg == "-L") {
 			if_have_lowers = true;
+			if_allocate_charset = true;
+		} else if(arg == "-s" || arg == "-S") {
+			if_have_signs = true;
 			if_allocate_charset = true;
 		} else if(arg == "-t" || arg == "-T") {
 			if(if_allocate_path) {
@@ -122,6 +126,7 @@ void print_help()
 	fmt::println("\t[-n | -N]\tadd all numbers to char set");
 	fmt::println("\t[-u | -U]\tadd all upper case letters to char set");
 	fmt::println("\t[-l | -L]\tadd all lower case letters to char set");
+	fmt::println("\t[-s | -S]\tadd all other printable ASCII signs to char set");
 	fmt::println("these char set option(s) need at least one, repeated will be ignore\n");
 
 	fmt::println("target path:");

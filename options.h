@@ -12,6 +12,7 @@
 inline std::string numbers = "0123456789";
 inline std::string uppers = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 inline std::string lowers = "abcdefghijklmnopqrstuvwxyz";
+inline std::string signs = " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
 
 //结构体：用户输入参数
 struct Options

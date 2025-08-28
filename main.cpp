@@ -24,7 +24,7 @@ int main(int argc, char * argv[])
 		options.charSet.append(numbers).append(uppers).append(lowers);
 		options.minPasswordLen = 1;
 		options.maxPasswordLen = 4;
-		options.threadCnt = 1;
+		options.threadCnt = 10;
 		options.isValid = true;
 	}
 	
@@ -67,7 +67,7 @@ int main(int argc, char * argv[])
 		if(file_stat.valid & ZIP_STAT_ENCRYPTION_METHOD) {
 			if(file_stat.encryption_method != ZIP_EM_NONE) {
 				fmt::println(
-					"File name:{} ,Comp method:{} , Encryp method:{}",
+					"File name: {}, Comp method:{}, Encryp method: {}",
 					file_stat.name,
 					file_stat.comp_method,
 					file_stat.encryption_method
@@ -166,9 +166,6 @@ void show_progress(uint64_t try_cnt_ob, uint64_t try_cnt_max, int bar_width)
 			bar.at(i) = '=';
 		}
 	}
-	//no bug with cout
-	std::cout << "\r[" << bar << "] " << int(percentage) << '%';
-	//bug with fmt
-	//std::cout << fmt::format("\r[{}] {:.0f}%\n", bar, percentage);
+	std::cout << fmt::format("\r[{}] {:.0f}%", bar, percentage);
 	std::cout.flush();
 }

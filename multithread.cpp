@@ -8,7 +8,6 @@
 
 const char * magic_db_path = MAGIC_DB_PATH;
 
-std::ofstream out_file;
 
 void thread_worker_function(
 	int thread_id,
@@ -34,7 +33,6 @@ void thread_worker_function(
 	zip_stat_init(&file_stat);
 	zip_stat_index(zip_archive.Get(), file_index, 0, &file_stat);
 	auto file_type = get_expected_file_type(file_stat.name);
-	fmt::println("file type: {}", (int)file_type);
 	bool if_need_check_crc = false;
 	bool if_need_check_magic = false;
 	if(file_stat.size <= read_cnt_max) {
@@ -68,7 +66,6 @@ void thread_worker_function(
 			fmt::println("Error: Failed to init libmagic");
 			return;
 		}
-		fmt::println("{}", magic_db_path);
 		if(magic_load(magic_cookie, magic_db_path) != 0) {
 			auto magic_err = magic_error(magic_cookie);
 			fmt::println("Error: Failed to load magic database: {}", magic_err);
@@ -76,10 +73,6 @@ void thread_worker_function(
 			return;
 		}
 	}
-
-	
-	out_file.open(fmt::format("data {}.csv", thread_id), std::ios::out | std::ios::trunc);
-	out_file << "try_password, " << "read_cnt," << std::endl;
 
 	auto char_set_len = options.charSet.length();
 	for(int password_len = options.minPasswordLen;
@@ -101,11 +94,7 @@ void thread_worker_function(
 				try_password
 			);
 			if(file != nullptr) {
-				out_file << std::endl;
 				auto read_cnt = zip_fread(file, file_data, read_cnt_max);
-				if(read_cnt > 0) {
-					out_file << try_password << ", " << read_cnt << ',';
-				}
 				auto file_err_zip = zip_file_get_error(file)->zip_err;
 				auto file_err_sys = zip_file_get_error(file)->sys_err;
 				zip_file_error_clear(file);
@@ -150,7 +139,6 @@ void thread_worker_function(
 	if(!if_password_found) {
 		index_ob = pow(char_set_len, options.maxPasswordLen);
 	}
-	out_file.close();
 	_freea(try_password);
 	_freea(file_data);
 }
@@ -221,7 +209,7 @@ bool check_magic(
 	if(semicolon_pos != std::string::npos) {
 		mime_str = mime_str.substr(0, semicolon_pos);
 	}
-	out_file << mime_str << ',';
+	//out_file << mime_str << ',';
 	auto type_it = mime_to_type.find(mime_str);
 	if(type_it == mime_to_type.end()) {
 		return false;
