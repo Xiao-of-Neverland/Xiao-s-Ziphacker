@@ -12,7 +12,7 @@
 
 //定义全局变量
 
-constexpr inline uint64_t read_cnt_max = 1024;
+inline uint64_t read_cnt_max = 1024;
 
 //找到的密码
 inline std::string password("");

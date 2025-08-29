@@ -8,6 +8,7 @@ project ("Xiao-s-Ziphacker" LANGUAGES CXX CUDA)
 enable_language(CUDA)
 
 include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+include_directories(src)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 17)
@@ -20,18 +21,15 @@ find_package(libzip REQUIRED)
 find_package(unofficial-libmagic CONFIG REQUIRED)
 
 add_executable (XZP
-	"main.h"
-	"main.cpp"
-	"PreValidation.cu"
-	"resources.h"
-	"resources.cpp"
-	"multithread.h"
-	"multithread.cpp"
-	"options.h"
-	"options.cpp"
+	"src/main.h"
+	"src/main.cpp"
+	"src/resources.h"
+	"src/resources.cpp"
+	"src/multithread.h"
+	"src/multithread.cpp"
+	"src/options.h"
+	"src/options.cpp"
 )
-
-set_source_files_properties("PreValidation.cu" PROPERTIES LANGUAGE CUDA)
 
 target_link_libraries(
 	XZP

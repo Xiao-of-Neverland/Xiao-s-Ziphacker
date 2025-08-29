@@ -41,6 +41,7 @@ void thread_worker_function(
 		if(file_stat.comp_method == ZIP_CM_STORE) {
 			if(file_type == FileType::UNSUPPORTED) {
 				if_need_check_crc = true;
+				read_cnt_max = file_stat.size;
 			} else {
 				if_need_check_magic = true;
 			}
