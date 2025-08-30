@@ -27,9 +27,6 @@ int main(int argc, char * argv[])
 		options.threadCnt = 10;
 		options.isValid = true;
 	}
-	
-	//记录启动时间
-	auto timer_start = std::chrono::high_resolution_clock::now();
 
 	//初始化线程数量
 	int thread_cnt = options.threadCnt;
@@ -82,6 +79,9 @@ int main(int argc, char * argv[])
 		return 1;
 	}
 
+	//记录启动时间
+	auto start_time = timer::now();
+
 	//创建线程
 	std::vector<std::thread> worker_threads;
 	for(int thread_id = 0; thread_id < thread_cnt; ++thread_id) {
@@ -108,7 +108,7 @@ int main(int argc, char * argv[])
 		}if(shared_resources.pMapView.use_count() <= 1) {
 			try_cnt_ob = try_cnt_max;
 		}
-		show_progress(try_cnt_ob, try_cnt_max);
+		print_progress(try_cnt_ob, try_cnt_max, start_time);
 		if(shared_resources.pMapView.use_count() <= 1) {
 			break;
 		}
@@ -121,9 +121,9 @@ int main(int argc, char * argv[])
 	}
 
 	//记录终止时间
-	auto timer_end = std::chrono::high_resolution_clock::now();
+	auto end_time = timer::now();
 	auto time_cost_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-		timer_end - timer_start
+		end_time - start_time
 	).count();
 
 	//计算破解速度
@@ -153,15 +153,19 @@ int main(int argc, char * argv[])
 	return 0;
 }
 
-void show_progress(uint64_t try_cnt_ob, uint64_t try_cnt_max, int bar_width)
+void print_progress(uint64_t try_cnt_ob, uint64_t try_cnt_max, time_point start_time)
 {
+	auto current_time = timer::now();
+	auto time_cost_sec = std::chrono::duration_cast<std::chrono::seconds>(
+		current_time - start_time
+	).count();
 	float percentage = (float)try_cnt_ob / try_cnt_max * 100;
 	if(percentage > 100.0) {
 		percentage = 100.0;
 	}
-	int bar_filled = bar_width * try_cnt_ob / try_cnt_max;
-	std::string bar(bar_width, ' ');
-	for(size_t i = 0; i < bar_width; ++i) {
+	int bar_filled = progress_bar_width * try_cnt_ob / try_cnt_max;
+	std::string bar(progress_bar_width, ' ');
+	for(size_t i = 0; i < progress_bar_width; ++i) {
 		if(i < bar_filled) {
 			bar.at(i) = '=';
 		}

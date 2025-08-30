@@ -1,26 +1,20 @@
 ﻿# CMakeList.txt: Xiao-s-Ziphacker 的 CMake 项目，在此处包括源代码并定义
 # 项目特定的逻辑。
 #
-cmake_minimum_required (VERSION 3.20)
+cmake_minimum_required (VERSION 3.21)
 
-project ("Xiao-s-Ziphacker" LANGUAGES CXX CUDA)
+project ("Xiao-s-Ziphacker" LANGUAGES CXX)
 
-enable_language(CUDA)
-
-include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 include_directories(src)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CUDA_STANDARD 17)
-
-set(CMAKE_CUDA_RUNTIME_LIBRARY)
 
 find_package(fmt REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(libzip REQUIRED)
 find_package(unofficial-libmagic CONFIG REQUIRED)
 
-add_executable (XZP
+add_executable (XiaosZiphacker
 	"src/main.h"
 	"src/main.cpp"
 	"src/resources.h"
@@ -32,7 +26,7 @@ add_executable (XZP
 )
 
 target_link_libraries(
-	XZP
+	XiaosZiphacker
 		PRIVATE
 			fmt::fmt
 			ZLIB::ZLIB

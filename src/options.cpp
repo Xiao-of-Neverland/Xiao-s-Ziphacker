@@ -119,7 +119,7 @@ Options init_options(int & argc, char * argv[])
 
 void print_help()
 {
-	fmt::print("usage: XZP.exe [char set option(s)] [target path] [password len range]");
+	fmt::print("usage: XiaosZiphacker.exe [char set option(s)] [target path] [password len range]");
 	fmt::println(" [thread cnt](optional)\n");
 
 	fmt::println("char set option(s):");
@@ -146,7 +146,7 @@ void print_help()
 	fmt::println("[-c | -C] must be followed by [CNT], IF GIVED, both need one and only one");
 	fmt::println("[thread cnt] is optional, if not gived, prog will set it automatically\n");
 
-	fmt::println("full example: XZP.exe -t \"D:\\test.zip\" -n -u -l -r 1,4");
+	fmt::println("full example: XiaosZiphacker.exe -t \"D:\\test.zip\" -n -u -l -r 1,4");
 }
 
 std::string gbk_to_utf8(const char * gbk_str)
