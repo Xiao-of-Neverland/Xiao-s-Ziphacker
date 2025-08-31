@@ -155,14 +155,55 @@ int main(int argc, char * argv[])
 
 void print_progress(uint64_t try_cnt_ob, uint64_t try_cnt_max, time_point start_time)
 {
-	auto current_time = timer::now();
-	auto time_cost_sec = std::chrono::duration_cast<std::chrono::seconds>(
-		current_time - start_time
-	).count();
 	float percentage = (float)try_cnt_ob / try_cnt_max * 100;
 	if(percentage > 100.0) {
 		percentage = 100.0;
 	}
+
+	auto current_time = timer::now();
+	auto time_cost_sec = std::chrono::duration_cast<std::chrono::seconds>(
+		current_time - start_time
+	).count();
+	long long time_need_sec = (float)time_cost_sec / percentage * (100 - percentage);
+
+	auto time_cost_hour = time_cost_sec / 3600;
+	time_cost_sec %= 3600;
+	auto time_cost_minute = time_cost_sec / 60;
+	time_cost_sec %= 60;
+
+	auto time_need_hour = time_need_sec / 3600;
+	time_need_sec %= 3600;
+	auto time_need_minute = time_need_sec / 60;
+	time_need_sec %= 60;
+
+	std::string time_cost_str(" ");
+	if(time_cost_hour > 0) {
+		time_cost_str += fmt::format("{}h", time_cost_hour);
+	}
+	if(time_cost_minute > 0) {
+		time_cost_str += fmt::format("{}m", time_cost_minute);
+	}
+	if(time_cost_sec > 0) {
+		time_cost_str += fmt::format("{}s", time_cost_sec);
+	}
+
+	std::string time_need_str(" ");
+	if(percentage >= 100.0) {
+		time_need_str.append("Done");
+	} else if(time_need_hour >= 24){
+		time_need_str.append("More than one day");
+	} else {
+		if(time_need_hour > 0) {
+			time_need_str += fmt::format("{}h", time_need_hour);
+		}
+		if(time_need_minute > 0) {
+			time_need_str += fmt::format("{}m", time_need_minute);
+		}
+		if(time_need_sec > 0) {
+			time_need_str += fmt::format("{}s", time_need_sec);
+		}
+	}
+
 	int bar_filled = progress_bar_width * try_cnt_ob / try_cnt_max;
 	std::string bar(progress_bar_width, ' ');
 	for(size_t i = 0; i < progress_bar_width; ++i) {
@@ -170,6 +211,12 @@ void print_progress(uint64_t try_cnt_ob, uint64_t try_cnt_max, time_point start_
 			bar.at(i) = '=';
 		}
 	}
-	std::cout << fmt::format("\r[{}] {:.0f}%", bar, percentage);
+	std::cout << fmt::format(
+		"\r[{}] {:.0f}% | Time cost:{} | Time need:{}",
+		bar,
+		percentage,
+		time_cost_str,
+		time_need_str
+	);
 	std::cout.flush();
 }
