@@ -65,13 +65,13 @@ Options init_options(int & argc, char * argv[])
 			options.minPasswordLen = password_len_pair.first;
 			options.maxPasswordLen = password_len_pair.second;
 			if_allocate_range = true;
-		} else if(arg == "-c" || arg == "-C") {
+		} else if(arg == "-m" || arg == "-M") {
 			if(if_allocate_thread) {
-				fmt::println("-- Error: Multiple allocate thread cnt --");
+				fmt::println("-- Error: Multiple allocate multithread cnt --");
 				return options;
 			}
 			if(i + 1 >= argc) {
-				fmt::println("-- Error: Invalid arguments, need thread cnt --");
+				fmt::println("-- Error: Invalid arguments, need multithread cnt --");
 				return options;
 			}
 			++i;
@@ -79,7 +79,7 @@ Options init_options(int & argc, char * argv[])
 			int cnt = 0;
 			auto result1 = std::from_chars(arg1.data(), arg1.data() + arg1.size(), cnt);
 			if(result1.ec != std::errc{} || cnt <= 0) {
-				fmt::println("-- Error: Invalid thread cnt --");
+				fmt::println("-- Error: Invalid multithread cnt --");
 				return options;
 			} else {
 				options.threadCnt = cnt;
@@ -120,7 +120,7 @@ Options init_options(int & argc, char * argv[])
 void print_help()
 {
 	fmt::print("usage: XiaosZiphacker.exe [char set option(s)] [target path] [password len range]");
-	fmt::println(" [thread cnt](optional)\n");
+	fmt::println(" [multithread cnt](optional)\n");
 
 	fmt::println("char set option(s):");
 	fmt::println("\t[-n | -N]\tadd all numbers to char set");
@@ -140,11 +140,11 @@ void print_help()
 	fmt::println("\t\t\t[MIN,MAX] [MIN MAX] [MIN-MAX]");
 	fmt::println("[-r | -R] must be followed by [RANGE], both need one and only one\n");
 
-	fmt::println("thread cnt:");
-	fmt::println("\t[-c | -C]\ttell prog to get thread cnt");
+	fmt::println("multithread cnt:");
+	fmt::println("\t[-m | -M]\ttell prog to get thread cnt");
 	fmt::println("\t[CNT]\tworker thread cnt, have to be positove int");
-	fmt::println("[-c | -C] must be followed by [CNT], IF GIVED, both need one and only one");
-	fmt::println("[thread cnt] is optional, if not gived, prog will set it automatically\n");
+	fmt::println("[-m | -M] must be followed by [CNT], IF GIVED, both need one and only one");
+	fmt::println("[multithread cnt] is optional, if not gived, prog will set it automatically\n");
 
 	fmt::println("full example: XiaosZiphacker.exe -t \"D:\\test.zip\" -n -u -l -r 1,4");
 }
