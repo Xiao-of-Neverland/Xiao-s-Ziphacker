@@ -18,15 +18,29 @@ int main(int argc, char * argv[])
 		}
 	} else {
 		fmt::println("Need options, use '-h' to get help info");
-		return 1;
+		//return 1;
 		//debug options
-		//options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao-s-Ziphacker\\test.zip");
-		//options.charSet.append(numbers).append(uppers).append(lowers);
-		//options.minPasswordLen = 1;
-		//options.maxPasswordLen = 4;
-		//options.threadCnt = 10;
-		//options.isValid = true;
+		options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao-s-Ziphacker\\test.zip");
+		options.charSet.append(numbers).append(uppers).append(lowers);
+		options.minPasswordLen = 1;
+		options.maxPasswordLen = 4;
+		options.threadCnt = 10;
+		options.isValid = true;
 	}
+
+	//检查libmagic数据库文件是否存在
+	try {
+		auto prog_path = std::filesystem::current_path();
+		auto magic_db_path = prog_path / "magic.mgc";
+		if(!std::filesystem::exists(magic_db_path)) {
+			fmt::println("-- Error: can't find magic database file: magic.mgc --");
+			return 1;
+		}
+	} catch(const std::filesystem::filesystem_error & err) {
+		std::cerr << "-- File system error: " << err.what() << " --" << std::endl;
+		return 1;
+	}
+	
 
 	//初始化线程数量
 	int thread_cnt = options.threadCnt;

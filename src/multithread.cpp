@@ -1,14 +1,6 @@
 ﻿#include "multithread.h"
 
 
-// 检查宏是否被定义
-#ifndef MAGIC_DB_PATH
-#error "MAGIC_DB_PATH is not defined. Please check your CMakeLists.txt"
-#endif
-
-const char * magic_db_path = MAGIC_DB_PATH;
-
-
 void thread_worker_function(
 	int thread_id,
 	int thread_cnt,
@@ -67,7 +59,7 @@ void thread_worker_function(
 			fmt::println("Error: Failed to init libmagic");
 			return;
 		}
-		if(magic_load(magic_cookie, magic_db_path) != 0) {
+		if(magic_load(magic_cookie, nullptr) != 0) {
 			auto magic_err = magic_error(magic_cookie);
 			fmt::println("Error: Failed to load magic database: {}", magic_err);
 			magic_close(magic_cookie);
