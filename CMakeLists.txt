@@ -5,7 +5,7 @@
 
 cmake_minimum_required (VERSION 3.21)
 
-project ("Xiao-s-Ziphacker" LANGUAGES CXX)
+project ("XiaosZiphacker" LANGUAGES CXX)
 
 include_directories(src)
 

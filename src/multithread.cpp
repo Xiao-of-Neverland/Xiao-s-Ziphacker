@@ -29,6 +29,7 @@ void thread_worker_function(
 	bool if_need_check_magic = false;
 	if(file_stat.size <= read_cnt_max) {
 		if_need_check_crc = true;
+		read_cnt_max = file_stat.size;
 	} else {
 		if(file_stat.comp_method == ZIP_CM_STORE) {
 			if(file_type == FileType::UNSUPPORTED) {
@@ -93,6 +94,9 @@ void thread_worker_function(
 				zip_file_error_clear(file);
 				zip_fclose(file);
 				if(file_err_zip + file_err_sys != 0) {
+					continue;
+				}
+				if(read_cnt < read_cnt_max) {
 					continue;
 				}
 				if(if_need_check_crc) {

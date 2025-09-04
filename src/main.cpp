@@ -18,14 +18,14 @@ int main(int argc, char * argv[])
 		}
 	} else {
 		fmt::println("Need options, use '-h' to get help info");
-		//return 1;
+		return 1;
 		//debug options
-		options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao-s-Ziphacker\\test.zip");
-		options.charSet.append(numbers).append(uppers).append(lowers);
-		options.minPasswordLen = 1;
-		options.maxPasswordLen = 4;
-		options.threadCnt = 10;
-		options.isValid = true;
+		//options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao-s-Ziphacker\\test2.zip");
+		//options.charSet.append(numbers).append(uppers).append(lowers);
+		//options.minPasswordLen = 1;
+		//options.maxPasswordLen = 4;
+		//options.threadCnt = 10;
+		//options.isValid = true;
 	}
 
 	//检查libmagic数据库文件是否存在
