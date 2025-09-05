@@ -41,6 +41,18 @@ void thread_worker_function(
 		}
 	}
 	
+	//检查系统内存
+	MEMORYSTATUSEX mem_info;
+	mem_info.dwLength = sizeof(MEMORYSTATUSEX);
+	if(GlobalMemoryStatusEx(&mem_info)) {
+		if(mem_info.ullTotalPhys < thread_cnt * read_cnt_max * 3 / 4) {
+			fmt::println("-- Error: Pyhsical memory not enough for read file in zip --");
+			return;
+		}
+	} else {
+		fmt::println("-- Warnning: Cant get physical memory --");
+	}
+
 	//初始化内存资源
 	char * try_password = (char *)_malloca(options.maxPasswordLen + 1);
 	if(try_password == nullptr) {
@@ -68,6 +80,7 @@ void thread_worker_function(
 		}
 	}
 
+	//遍历密码长度，尝试密码组合
 	auto char_set_len = options.charSet.length();
 	for(int password_len = options.minPasswordLen;
 		password_len <= options.maxPasswordLen;
