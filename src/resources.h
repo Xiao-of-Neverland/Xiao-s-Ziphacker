@@ -203,3 +203,10 @@ SharedResources init_shared_resources(std::string target_path);
 //从共享的内存映射资源创建并打开独立的zip文档对象
 ZipArchive init_zip_archive(const SharedResources & shared_resources);
 
+//查找zip数据的起始位置和大小。用于应对多格式文件
+bool find_zip_data(
+	const SharedResources & shared_resources,
+	LPVOID & zip_data,
+	zip_uint64_t & zip_size
+);
+

@@ -188,3 +188,12 @@ ZipArchive init_zip_archive(const SharedResources & shared_resources)
 
 	return ZipArchive(p_zip_archive);
 }
+
+bool find_zip_data(
+	const SharedResources & shared_resources,
+	LPVOID & zip_data,
+	zip_uint64_t & zip_size
+)
+{
+	return false;
+}
