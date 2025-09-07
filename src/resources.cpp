@@ -195,5 +195,29 @@ bool find_zip_data(
 	zip_uint64_t & zip_size
 )
 {
-	return false;
+	const char * zip_header = "\x50\x4B\x03\x04"; // 0x04034B50
+	const char * zip_eocdr = "\x50\x4B\x05\x06"; // 0x06054B50
+	std::string_view data_view(static_cast<const char *>(shared_resources.pMapView->Get()));
+	//获取zip header位置
+	auto header_pos = data_view.find(zip_header);
+	if(header_pos == std::string_view::npos) {
+		return false;
+	}
+	//获取zip eocdr位置
+	auto eocdr_pos = data_view.rfind(zip_eocdr);
+	if(eocdr_pos == std::string_view::npos) {
+		return false;
+	}
+	//检查eocdr注释长度段，获取注释长度
+	if(eocdr_pos + 20 >= shared_resources.fileSize) {
+		return false;
+	}
+	uint16_t comment_len = *((uint16_t *)zip_data + 20);
+	//计算zip数据长度并验证
+	zip_size = (eocdr_pos - header_pos) + sizeof(zip_eocdr) + 18 + comment_len;
+	if(header_pos + zip_size > shared_resources.fileSize) {
+		return false;
+	}
+	zip_data = (LPVOID)((uint8_t *)zip_data + header_pos);
+	return true;
 }
