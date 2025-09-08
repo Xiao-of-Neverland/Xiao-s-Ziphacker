@@ -7,12 +7,12 @@ int main(int argc, char * argv[])
 	Options options;
 	if(argc > 1) {
 		options = init_options(argc, argv);
-		fmt::println("Isvalid: {}", options.isValid);
+		fmt::println("Isvalid: {}", options.ifValid);
 		fmt::println("Path: {}", options.targetPath.u8string());
 		fmt::println("Charset: {}", options.charSet);
 		fmt::println("Len range: {} - {}", options.minPasswordLen, options.maxPasswordLen);
 		fmt::println("Thread cnt: {} (\"0\" means use prog setting)", options.threadCnt);
-		if(!options.isValid) {
+		if(!options.ifValid) {
 			fmt::println("Invalid options, use '-h' to get help info");
 			return 1;
 		}
@@ -20,12 +20,12 @@ int main(int argc, char * argv[])
 		fmt::println("Need options, use '-h' to get help info");
 		return 1;
 		//debug options
-		//options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao-s-Ziphacker\\test2.zip");
-		//options.charSet.append(numbers).append(uppers).append(lowers);
-		//options.minPasswordLen = 1;
-		//options.maxPasswordLen = 4;
-		//options.threadCnt = 10;
-		//options.isValid = true;
+		options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao-s-Ziphacker\\test3.zip");
+		options.charSet.append(numbers).append(uppers).append(lowers);
+		options.minPasswordLen = 1;
+		options.maxPasswordLen = 4;
+		options.threadCnt = 10;
+		options.ifValid = true;
 	}
 
 	//检查libmagic数据库文件是否存在
@@ -59,7 +59,7 @@ int main(int argc, char * argv[])
 
 	//初始化zip文档
 	auto zip_archive = init_zip_archive(shared_resources);
-	if(!zip_archive.IsValid()) {
+	if(!zip_archive.IfValid()) {
 		fmt::println("-- Error: Failed to open ZIP archive --");
 		return 1;
 	}

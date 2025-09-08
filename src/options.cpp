@@ -111,7 +111,7 @@ Options init_options(int & argc, char * argv[])
 	}
 
 	if(if_allocate_charset && if_allocate_path && if_allocate_range) {
-		options.isValid = true;
+		options.ifValid = true;
 	}
 
 	return options;

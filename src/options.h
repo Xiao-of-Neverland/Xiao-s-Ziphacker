@@ -17,7 +17,7 @@ inline std::string signs = " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
 //结构体：用户输入参数
 struct Options
 {
-	bool isValid = false;
+	bool ifValid = false;
 	std::filesystem::path targetPath;
 	std::string charSet;
 	int minPasswordLen = 0;

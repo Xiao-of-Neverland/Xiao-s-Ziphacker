@@ -31,7 +31,7 @@ public:
 	FileHandle & operator=(FileHandle && other)noexcept
 	{
 		if(this != &other) {
-			if(this->IsValid()) {
+			if(this->IfValid()) {
 				CloseHandle(hFile);
 			}
 			this->hFile = std::exchange(other.hFile, INVALID_HANDLE_VALUE);
@@ -55,7 +55,7 @@ public:
 	HANDLE Release();
 
 	//检查HANDLE是否有效
-	bool IsValid() const;
+	bool IfValid() const;
 };
 
 
@@ -79,7 +79,7 @@ public:
 	FileMappingHandle & operator=(FileMappingHandle && other) noexcept
 	{
 		if(this != &other) {
-			if(this->IsValid()) {
+			if(this->IfValid()) {
 				CloseHandle(hFileMap);
 			}
 			this->hFileMap = std::exchange(other.hFileMap, nullptr);
@@ -98,7 +98,7 @@ public:
 
 	HANDLE Release();
 
-	bool IsValid() const;
+	bool IfValid() const;
 };
 typedef FileMappingHandle MapHandle;
 
@@ -123,7 +123,7 @@ public:
 	MapView & operator=(MapView && other) noexcept
 	{
 		if(this != &other) {
-			if(this->IsValid()) {
+			if(this->IfValid()) {
 				UnmapViewOfFile(lpBaseAddress);
 			}
 			this->lpBaseAddress = std::exchange(other.lpBaseAddress, nullptr);
@@ -142,7 +142,7 @@ public:
 
 	LPVOID Release();
 
-	bool IsValid() const;
+	bool IfValid() const;
 };
 
 
@@ -166,7 +166,7 @@ public:
 	ZipArchive & operator=(ZipArchive && other)noexcept
 	{
 		if(this != &other) {
-			if(this->IsValid()) {
+			if(this->IfValid()) {
 				zip_close(archive);
 			}
 			this->archive = std::exchange(other.archive, nullptr);
@@ -182,14 +182,16 @@ public:
 
 	zip_t * Get() const;
 
-	bool IsValid() const;
+	bool IfValid() const;
 };
 
 
 //结构体：线程共享资源
 struct SharedResources
 {
-	bool isValid = false;
+	bool ifValid = false;
+	bool ifUseZipDataPtr = false; // 为true时使用pZipData（zip数据指针）代替pMapView（内存视图指针）
+	LPVOID pZipData = nullptr;
 	std::shared_ptr<FileHandle> pFileHandle;
 	std::shared_ptr<FileMappingHandle> pFileMapHandle;
 	std::shared_ptr<MapView> pMapView;
@@ -203,10 +205,9 @@ SharedResources init_shared_resources(std::string target_path);
 //从共享的内存映射资源创建并打开独立的zip文档对象
 ZipArchive init_zip_archive(const SharedResources & shared_resources);
 
+//检查并尝试整理文件数据，随后调用init_zip_archive。仅主线程使用
+ZipArchive pre_init_zip_archive(SharedResources & shared_resources);
+
 //查找zip数据的起始位置和大小。用于应对多格式文件
-bool find_zip_data(
-	const SharedResources & shared_resources,
-	LPVOID & zip_data,
-	zip_uint64_t & zip_size
-);
+bool find_zip_data(SharedResources & shared_resources);
 

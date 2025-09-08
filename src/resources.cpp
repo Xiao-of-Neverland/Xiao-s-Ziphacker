@@ -4,7 +4,7 @@
 
 FileHandle::~FileHandle()
 {
-	if(this->IsValid()) {
+	if(this->IfValid()) {
 		CloseHandle(hFile);
 	}
 }
@@ -19,7 +19,7 @@ HANDLE FileHandle::Release()
 	return std::exchange(hFile, INVALID_HANDLE_VALUE);
 }
 
-bool FileHandle::IsValid() const
+bool FileHandle::IfValid() const
 {
 	return hFile != INVALID_HANDLE_VALUE && hFile != nullptr;
 }
@@ -29,7 +29,7 @@ bool FileHandle::IsValid() const
 
 FileMappingHandle::~FileMappingHandle()
 {
-	if(this->IsValid()) {
+	if(this->IfValid()) {
 		CloseHandle(hFileMap);
 	}
 }
@@ -44,7 +44,7 @@ HANDLE FileMappingHandle::Release()
 	return std::exchange(hFileMap, nullptr);
 }
 
-bool FileMappingHandle::IsValid() const
+bool FileMappingHandle::IfValid() const
 {
 	return hFileMap != nullptr;
 }
@@ -54,7 +54,7 @@ bool FileMappingHandle::IsValid() const
 
 MapView::~MapView()
 {
-	if(this->IsValid()) {
+	if(this->IfValid()) {
 		UnmapViewOfFile(lpBaseAddress);
 	}
 }
@@ -69,7 +69,7 @@ LPVOID MapView::Release()
 	return std::exchange(lpBaseAddress, nullptr);
 }
 
-bool MapView::IsValid() const
+bool MapView::IfValid() const
 {
 	return lpBaseAddress != nullptr;
 }
@@ -79,7 +79,7 @@ bool MapView::IsValid() const
 
 ZipArchive::~ZipArchive()
 {
-	if(IsValid()) {
+	if(IfValid()) {
 		zip_close(archive);
 	}
 }
@@ -89,7 +89,7 @@ zip_t * ZipArchive::Get() const
 	return archive;
 }
 
-bool ZipArchive::IsValid() const
+bool ZipArchive::IfValid() const
 {
 	return archive != nullptr;
 }
@@ -111,7 +111,7 @@ SharedResources init_shared_resources(std::string target_path)
 		FILE_ATTRIBUTE_NORMAL,
 		nullptr
 	));
-	if(!p_file_handle->IsValid()) {
+	if(!p_file_handle->IfValid()) {
 		fmt::println("-- Failed to open file: {} --", GetLastError());
 		return {};
 	}
@@ -134,7 +134,7 @@ SharedResources init_shared_resources(std::string target_path)
 		file_size.LowPart,
 		nullptr
 	));
-	if(!p_file_map_handle->IsValid()) {
+	if(!p_file_map_handle->IfValid()) {
 		fmt::println("-- Failed to create file mapping: {} --", GetLastError());
 		return {};
 	}
@@ -148,13 +148,13 @@ SharedResources init_shared_resources(std::string target_path)
 		0,
 		0
 	));
-	if(!p_map_view->IsValid()) {
+	if(!p_map_view->IfValid()) {
 		fmt::println("-- Failed to map view of file: {} --", GetLastError());
 		return {};
 	}
 	shared_resources.pMapView = std::move(p_map_view);
 
-	shared_resources.isValid = true;
+	shared_resources.ifValid = true;
 	return shared_resources;
 }
 
@@ -163,9 +163,16 @@ ZipArchive init_zip_archive(const SharedResources & shared_resources)
 	zip_error_t err;
 	zip_error_init(&err);
 
+	LPVOID p_data_view = nullptr;
+	if(shared_resources.ifUseZipDataPtr) {
+		p_data_view = shared_resources.pZipData;
+	} else {
+		p_data_view = shared_resources.pMapView->Get();
+	}
+
 	//从内存缓冲区创建zip资源对象
 	zip_source_t * p_zip_source = zip_source_buffer_create(
-		shared_resources.pMapView->Get(),
+		p_data_view,
 		shared_resources.fileSize,
 		0,
 		&err
@@ -189,35 +196,82 @@ ZipArchive init_zip_archive(const SharedResources & shared_resources)
 	return ZipArchive(p_zip_archive);
 }
 
-bool find_zip_data(
-	const SharedResources & shared_resources,
-	LPVOID & zip_data,
-	zip_uint64_t & zip_size
-)
+ZipArchive pre_init_zip_archive(SharedResources & shared_resources)
 {
+	zip_error_t err;
+	zip_error_init(&err);
+
+	//从内存缓冲区创建zip资源对象
+	zip_source_t * p_zip_source = zip_source_buffer_create(
+		shared_resources.pMapView->Get(),
+		shared_resources.fileSize,
+		0,
+		&err
+	);
+	if(p_zip_source == nullptr) {
+		fmt::println("-- Failed to create zip source from buffer: {} --", zip_error_strerror(&err));
+		return ZipArchive(nullptr);
+	}
+
+	//从zip资源对象打开zip文档对象
+	zip_t * p_zip_archive = zip_open_from_source(
+		p_zip_source,
+		ZIP_RDONLY,
+		&err
+	);
+	if(p_zip_archive == nullptr) {
+		if(err.zip_err == ZIP_ER_NOZIP) {
+			if(find_zip_data(shared_resources)) {
+				return init_zip_archive(shared_resources);
+			} else {
+				fmt::println("-- Failed to find zip data --");
+				return ZipArchive(nullptr);
+			}
+		} else {
+			fmt::println("-- Failed to open zip archive from source: {} --", zip_error_strerror(&err));
+			return ZipArchive(nullptr);
+		}
+	}
+
+	return ZipArchive(p_zip_archive);
+}
+
+bool find_zip_data(SharedResources & shared_resources)
+{
+	const char * p_uint8_data = static_cast<const char *>(shared_resources.pMapView->Get());
 	const char * zip_header = "\x50\x4B\x03\x04"; // 0x04034B50
 	const char * zip_eocdr = "\x50\x4B\x05\x06"; // 0x06054B50
-	std::string_view data_view(static_cast<const char *>(shared_resources.pMapView->Get()));
+	std::string_view data_view(p_uint8_data);
+
 	//获取zip header位置
 	auto header_pos = data_view.find(zip_header);
 	if(header_pos == std::string_view::npos) {
+		fmt::println("Failed to find header_pos");
 		return false;
 	}
+
 	//获取zip eocdr位置
 	auto eocdr_pos = data_view.rfind(zip_eocdr);
 	if(eocdr_pos == std::string_view::npos) {
+		fmt::println("Failed to find eocdr_pos");
 		return false;
 	}
+
 	//检查eocdr注释长度段，获取注释长度
 	if(eocdr_pos + 20 >= shared_resources.fileSize) {
 		return false;
 	}
-	uint16_t comment_len = *((uint16_t *)zip_data + 20);
+	uint16_t comment_len = *(uint16_t *)(p_uint8_data + eocdr_pos + 20);
+
 	//计算zip数据长度并验证
-	zip_size = (eocdr_pos - header_pos) + sizeof(zip_eocdr) + 18 + comment_len;
+	zip_uint64_t zip_size = (eocdr_pos - header_pos) + sizeof(zip_eocdr) + 18 + comment_len;
 	if(header_pos + zip_size > shared_resources.fileSize) {
 		return false;
 	}
-	zip_data = (LPVOID)((uint8_t *)zip_data + header_pos);
+
+	fmt::println("{}, {}", header_pos, eocdr_pos);
+	shared_resources.pZipData = (LPVOID)(p_uint8_data + header_pos);
+	shared_resources.ifUseZipDataPtr = true;
 	return true;
 }
+

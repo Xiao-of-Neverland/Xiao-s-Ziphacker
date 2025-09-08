@@ -16,7 +16,7 @@ void thread_worker_function(
 	}
 
 	auto zip_archive = init_zip_archive(shared_resources);
-	if(!zip_archive.IsValid()) {
+	if(!zip_archive.IfValid()) {
 		fmt::println("-- Error: Failed to open ZIP archive --");
 		return;
 	}
