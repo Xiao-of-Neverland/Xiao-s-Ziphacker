@@ -18,7 +18,7 @@ int main(int argc, char * argv[])
 		}
 	} else {
 		fmt::println("Need options, use '-h' to get help info");
-		return 1;
+		//return 1;
 		//debug options
 		options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao-s-Ziphacker\\test3.zip");
 		options.charSet.append(numbers).append(uppers).append(lowers);
@@ -58,7 +58,7 @@ int main(int argc, char * argv[])
 	auto shared_resources = init_shared_resources(options.targetPath.generic_string());
 
 	//初始化zip文档
-	auto zip_archive = init_zip_archive(shared_resources);
+	auto zip_archive = pre_init_zip_archive(shared_resources);
 	if(!zip_archive.IfValid()) {
 		fmt::println("-- Error: Failed to open ZIP archive --");
 		return 1;

@@ -238,10 +238,14 @@ ZipArchive pre_init_zip_archive(SharedResources & shared_resources)
 
 bool find_zip_data(SharedResources & shared_resources)
 {
-	const char * p_uint8_data = static_cast<const char *>(shared_resources.pMapView->Get());
+	const uint8_t * p_uint8_data = static_cast<const uint8_t *>(shared_resources.pMapView->Get());
 	const char * zip_header = "\x50\x4B\x03\x04"; // 0x04034B50
 	const char * zip_eocdr = "\x50\x4B\x05\x06"; // 0x06054B50
-	std::string_view data_view(p_uint8_data);
+	std::string_view data_view((char *)p_uint8_data);
+	fmt::println("{}", data_view.size());
+	std::ofstream out_file;
+	out_file.open("uint8_data.txt", std::ios::out | std::ios::trunc);
+	out_file << data_view;
 
 	//获取zip header位置
 	auto header_pos = data_view.find(zip_header);

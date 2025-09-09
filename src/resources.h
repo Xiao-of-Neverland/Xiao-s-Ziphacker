@@ -6,6 +6,7 @@
 #include <fmt/core.h>
 #include <utility>
 #include <memory>
+#include <fstream>
 
 //封装管理文件句柄
 class FileHandle
