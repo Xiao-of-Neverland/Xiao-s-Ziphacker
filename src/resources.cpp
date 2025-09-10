@@ -238,14 +238,10 @@ ZipArchive pre_init_zip_archive(SharedResources & shared_resources)
 
 bool find_zip_data(SharedResources & shared_resources)
 {
-	const uint8_t * p_uint8_data = static_cast<const uint8_t *>(shared_resources.pMapView->Get());
+	const char * p_uint8_data = static_cast<const char *>(shared_resources.pMapView->Get());
 	const char * zip_header = "\x50\x4B\x03\x04"; // 0x04034B50
 	const char * zip_eocdr = "\x50\x4B\x05\x06"; // 0x06054B50
-	std::string_view data_view((char *)p_uint8_data);
-	fmt::println("{}", data_view.size());
-	std::ofstream out_file;
-	out_file.open("uint8_data.txt", std::ios::out | std::ios::trunc);
-	out_file << data_view;
+	std::string_view data_view(p_uint8_data, shared_resources.fileSize);
 
 	//获取zip header位置
 	auto header_pos = data_view.find(zip_header);
@@ -268,13 +264,14 @@ bool find_zip_data(SharedResources & shared_resources)
 	uint16_t comment_len = *(uint16_t *)(p_uint8_data + eocdr_pos + 20);
 
 	//计算zip数据长度并验证
-	zip_uint64_t zip_size = (eocdr_pos - header_pos) + sizeof(zip_eocdr) + 18 + comment_len;
+	zip_uint64_t zip_size = (eocdr_pos - header_pos) + 22 + comment_len;
 	if(header_pos + zip_size > shared_resources.fileSize) {
+		fmt::println("Invalid zip size when find zip data");
 		return false;
 	}
 
-	fmt::println("{}, {}", header_pos, eocdr_pos);
 	shared_resources.pZipData = (LPVOID)(p_uint8_data + header_pos);
+	shared_resources.fileSize = zip_size;
 	shared_resources.ifUseZipDataPtr = true;
 	return true;
 }

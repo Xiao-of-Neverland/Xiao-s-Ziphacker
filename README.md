@@ -29,6 +29,6 @@
 5. 右键CreatePackage，选择生成
 6. 打包好的程序会位于`./Xiao-s-Ziphackerbuild/release/package`
 
-## 已知异常用例
+## 已知异常文件
 1. 通过特殊编码可被识别为`.mp4`文件的`.zip`文件
 2. 以仅存储方式压缩的无法特异性识别其类型的文件

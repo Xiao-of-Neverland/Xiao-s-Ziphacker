@@ -15,12 +15,14 @@ void thread_worker_function(
 		return;
 	}
 
+	//初始化zip文档
 	auto zip_archive = init_zip_archive(shared_resources);
 	if(!zip_archive.IfValid()) {
 		fmt::println("-- Error: Failed to open ZIP archive --");
 		return;
 	}
 
+	//设置校验方式
 	zip_stat_t file_stat;
 	zip_stat_init(&file_stat);
 	zip_stat_index(zip_archive.Get(), file_index, 0, &file_stat);
@@ -219,7 +221,6 @@ bool check_magic(
 	if(semicolon_pos != std::string::npos) {
 		mime_str = mime_str.substr(0, semicolon_pos);
 	}
-	//out_file << mime_str << ',';
 	auto type_it = mime_to_type.find(mime_str);
 	if(type_it == mime_to_type.end()) {
 		return false;
