@@ -20,7 +20,7 @@ int main(int argc, char * argv[])
 		fmt::println("Need options, use '-h' to get help info");
 		return 1;
 		//debug options
-		options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao-s-Ziphacker\\test3.zip");
+		options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao-s-Ziphacker\\test2.zip");
 		options.charSet.append(numbers).append(uppers).append(lowers);
 		options.minPasswordLen = 1;
 		options.maxPasswordLen = 4;
@@ -109,30 +109,7 @@ int main(int argc, char * argv[])
 		);
 	}
 
-	//打印进度条。包含任务终止判定
-	uint64_t try_cnt_max = 0;
-	for(size_t i = options.minPasswordLen; i <= options.maxPasswordLen; ++i) {
-		try_cnt_max += pow(options.charSet.length(), i);
-	}
-	do {
-		uint64_t try_cnt_ob = index_ob;
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		for(size_t i = options.minPasswordLen; i < password_len_ob; ++i) {
-			try_cnt_ob += pow(options.charSet.length(), i);
-		}if(shared_resources.pMapView.use_count() <= 1) {
-			try_cnt_ob = try_cnt_max;
-		}
-		print_progress(try_cnt_ob, try_cnt_max, start_time);
-		if(shared_resources.pMapView.use_count() <= 1) {
-			break;
-		}
-	} while(!if_password_found);
-	fmt::print("\n");
-
-	//等待线程终止
-	for(auto & worker_thread : worker_threads) {
-		worker_thread.join();
-	}
+	wait_worker(options, shared_resources, start_time, worker_threads);
 
 	//记录终止时间
 	auto end_time = timer::now();
@@ -165,6 +142,38 @@ int main(int argc, char * argv[])
 	}
 
 	return 0;
+}
+
+void wait_worker(
+	Options & options,
+	SharedResources & shared_resources,
+	time_point & start_time,
+	std::vector<std::thread> & worker_threads
+)
+{
+	uint64_t try_cnt_max = 0;
+	for(size_t i = options.minPasswordLen; i <= options.maxPasswordLen; ++i) {
+		try_cnt_max += pow(options.charSet.length(), i);
+	}
+	do {
+		uint64_t try_cnt_ob = index_ob;
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		for(size_t i = options.minPasswordLen; i < password_len_ob; ++i) {
+			try_cnt_ob += pow(options.charSet.length(), i);
+		}if(shared_resources.pMapView.use_count() <= 1) {
+			try_cnt_ob = try_cnt_max;
+		}
+		print_progress(try_cnt_ob, try_cnt_max, start_time);
+		if(shared_resources.pMapView.use_count() <= 1) {
+			break;
+		}
+	} while(!if_password_found);
+	fmt::print("\n");
+
+	//等待线程终止
+	for(auto & worker_thread : worker_threads) {
+		worker_thread.join();
+	}
 }
 
 void print_progress(uint64_t try_cnt_ob, uint64_t try_cnt_max, time_point start_time)
