@@ -1,12 +1,16 @@
 ﻿#pragma once
 
-#include <Windows.h>
 #include <zip.h>
 #include <string>
 #include <fmt/core.h>
 #include <utility>
 #include <memory>
-#include <fstream>
+
+
+//windows API
+#if defined(_WIN32)
+
+#include <Windows.h>
 
 //封装管理文件句柄
 class FileHandle
@@ -146,6 +150,41 @@ public:
 	bool IfValid() const;
 };
 
+//结构体：线程共享资源
+struct SharedResources
+{
+	bool ifValid = false;
+	bool ifUseZipDataPtr = false; // 为true时使用pZipData（zip数据指针）代替pMapView（内存视图指针）
+	LPVOID pZipData = nullptr;
+	std::shared_ptr<FileHandle> pFileHandle;
+	std::shared_ptr<FileMappingHandle> pFileMapHandle;
+	std::shared_ptr<MapView> pMapView;
+	zip_uint64_t fileSize = 0;
+};
+
+#endif
+
+
+//linux API
+#if defined(__linux__)
+
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+
+
+//封装管理文件描述符
+class FileDescriptor
+{
+private:
+	int fd;
+public:
+
+};
+
+#endif
+
 
 //封装管理zip_t*
 class ZipArchive
@@ -184,19 +223,6 @@ public:
 	zip_t * Get() const;
 
 	bool IfValid() const;
-};
-
-
-//结构体：线程共享资源
-struct SharedResources
-{
-	bool ifValid = false;
-	bool ifUseZipDataPtr = false; // 为true时使用pZipData（zip数据指针）代替pMapView（内存视图指针）
-	LPVOID pZipData = nullptr;
-	std::shared_ptr<FileHandle> pFileHandle;
-	std::shared_ptr<FileMappingHandle> pFileMapHandle;
-	std::shared_ptr<MapView> pMapView;
-	zip_uint64_t fileSize = 0;
 };
 
 
