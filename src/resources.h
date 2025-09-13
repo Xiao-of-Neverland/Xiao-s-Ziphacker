@@ -174,12 +174,55 @@ struct SharedResources
 #include <sys/stat.h>
 
 
-//封装管理文件描述符
+//封装管理Linux文件描述符
 class FileDescriptor
 {
 private:
-	int fd;
+	int fileDescriptor;
 public:
+	explicit FileDescriptor(int fd = -1):
+		fileDescriptor(fd)
+	{}
+
+	FileDescriptor(const FileDescriptor &) = delete;
+	FileDescriptor & operator=(const FileDescriptor &) = delete;
+
+	FileDescriptor(FileDescriptor && other) noexcept:
+		fileDescriptor(std::exchange(other.fileDescriptor, -1))
+	{}
+
+	FileDescriptor & operator=(FileDescriptor && other) noexcept
+	{
+		if(this != &other) {
+			if(this->IfValid()) {
+				close(fileDescriptor);
+			}this->fileDescriptor = std::exchange(other.fileDescriptor, -1);
+		}
+	}
+
+	~FileDescriptor();
+
+	operator int() const
+	{
+		return fileDescriptor;
+	}
+
+	int Get() const;
+
+	bool IfValid() const;
+};
+
+
+//封装管理Linux文件映射
+class FileMap
+{
+private:
+	void * mapAddr;
+public:
+	explicit FileMap(void * addr = MAP_FAILED):
+		mapAddr(addr)
+	{}
+
 
 };
 
@@ -203,7 +246,7 @@ public:
 		archive(std::exchange(other.archive, nullptr))
 	{}
 
-	ZipArchive & operator=(ZipArchive && other)noexcept
+	ZipArchive & operator=(ZipArchive && other) noexcept
 	{
 		if(this != &other) {
 			if(this->IfValid()) {
