@@ -209,6 +209,8 @@ public:
 
 	int Get() const;
 
+	int Release();
+
 	bool IfValid() const;
 };
 
@@ -218,12 +220,37 @@ class FileMap
 {
 private:
 	void * mapAddr;
+	size_t length;
 public:
-	explicit FileMap(void * addr = MAP_FAILED):
-		mapAddr(addr)
+	explicit FileMap(void * addr = MAP_FAILED, size_t len = 0):
+		mapAddr(addr),
+		length(len)
 	{}
 
+	FileMap(const FileMap &) = delete;
+	FileMap & operator=(const FileMap &) = delete;
 
+	FileMap(FileMap && other) noexcept:
+		mapAddr(std::exchange(other.mapAddr, MAP_FAILED)),
+		length(std::exchange(other.length, 0))
+	{}
+
+	FileMap & operator=(FileMap && other) noexcept
+	{
+		if(this != &other) {
+			if(this->IfValid()) {
+				munmap(mapAddr, length);
+			}
+		}
+	}
+
+	~FileMap();
+
+	void * Get() const;
+
+	FileMap Release();
+
+	bool IfValid() const;
 };
 
 #endif
