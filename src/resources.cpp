@@ -1,11 +1,15 @@
 ﻿#include "resources.h"
 
+//windows API
+#if defined(_WIN32)
+
 //FileHandle部分
 
 FileHandle::~FileHandle()
 {
-	if(this->IfValid()) {
+	if(IfValid()) {
 		CloseHandle(hFile);
+		hFile = INVALID_HANDLE_VALUE;
 	}
 }
 
@@ -29,8 +33,9 @@ bool FileHandle::IfValid() const
 
 FileMappingHandle::~FileMappingHandle()
 {
-	if(this->IfValid()) {
+	if(IfValid()) {
 		CloseHandle(hFileMap);
+		hFileMap = nullptr;
 	}
 }
 
@@ -54,8 +59,9 @@ bool FileMappingHandle::IfValid() const
 
 MapView::~MapView()
 {
-	if(this->IfValid()) {
+	if(IfValid()) {
 		UnmapViewOfFile(lpBaseAddress);
+		lpBaseAddress = nullptr;
 	}
 }
 
@@ -81,6 +87,7 @@ ZipArchive::~ZipArchive()
 {
 	if(IfValid()) {
 		zip_close(archive);
+		archive = nullptr;
 	}
 }
 
@@ -276,3 +283,51 @@ bool find_zip_data(SharedResources & shared_resources)
 	return true;
 }
 
+#endif
+
+
+//linux API
+#if defined(__linux__)
+
+
+//FileDescriptor部分
+
+FileDescriptor::~FileDescriptor()
+{
+	if(IfValid()) {
+		close(fileDescriptor);
+		fileDescriptor = -1;
+	}
+}
+
+int FileDescriptor::Get() const
+{
+	return fileDescriptor;
+}
+
+int FileDescriptor::Release()
+{
+	return std::exchange(fileDescriptor, -1);
+}
+
+bool FileDescriptor::IfValid() const
+{
+	if(fileDescriptor >= 0) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
+//FileMap部分
+
+FileMap::~FileMap()
+{
+	if(IfValid()) {
+		munmap(mapAddr, length);
+		mapAddr = MAP_FAILED;
+	}
+}
+
+#endif

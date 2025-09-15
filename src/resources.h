@@ -246,11 +246,25 @@ public:
 
 	~FileMap();
 
-	void * Get() const;
+	void * GetAddr() const;
+
+	int GetLen() const;
 
 	FileMap Release();
 
 	bool IfValid() const;
+};
+
+
+//结构体：线程共享资源
+struct SharedResources
+{
+	bool ifValid = false;
+	bool ifUseZipDataPtr = false; // 为true时使用pZipData（zip数据指针）代替pMapView（内存视图指针）
+	void * pZipData = nullptr;
+	std::shared_ptr<FileDescriptor> pFileDescriptor;
+	std::shared_ptr<FileMap> pFileMap;
+	zip_uint64_t fileSize = 0;
 };
 
 #endif
