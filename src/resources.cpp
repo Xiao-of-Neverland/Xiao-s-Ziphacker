@@ -245,10 +245,10 @@ ZipArchive pre_init_zip_archive(SharedResources & shared_resources)
 
 bool find_zip_data(SharedResources & shared_resources)
 {
-	const char * p_uint8_data = static_cast<const char *>(shared_resources.pMapView->Get());
+	const char * p_char_data = static_cast<const char *>(shared_resources.pMapView->Get());
 	const char * zip_header = "\x50\x4B\x03\x04"; // 0x04034B50
 	const char * zip_eocdr = "\x50\x4B\x05\x06"; // 0x06054B50
-	std::string_view data_view(p_uint8_data, shared_resources.fileSize);
+	std::string_view data_view(p_char_data, shared_resources.fileSize);
 
 	//获取zip header位置
 	auto header_pos = data_view.find(zip_header);
@@ -268,7 +268,7 @@ bool find_zip_data(SharedResources & shared_resources)
 	if(eocdr_pos + 20 >= shared_resources.fileSize) {
 		return false;
 	}
-	uint16_t comment_len = *(uint16_t *)(p_uint8_data + eocdr_pos + 20);
+	uint16_t comment_len = *(uint16_t *)(p_char_data + eocdr_pos + 20);
 
 	//计算zip数据长度并验证
 	zip_uint64_t zip_size = (eocdr_pos - header_pos) + 22 + comment_len;
@@ -277,7 +277,7 @@ bool find_zip_data(SharedResources & shared_resources)
 		return false;
 	}
 
-	shared_resources.pZipData = (LPVOID)(p_uint8_data + header_pos);
+	shared_resources.pZipData = (LPVOID)(p_char_data + header_pos);
 	shared_resources.fileSize = zip_size;
 	shared_resources.ifUseZipDataPtr = true;
 	return true;
@@ -328,6 +328,83 @@ FileMap::~FileMap()
 		munmap(mapAddr, length);
 		mapAddr = MAP_FAILED;
 	}
+}
+
+void * FileMap::GetAddr() const
+{
+	return mapAddr;
+}
+
+int FileMap::GetLen() const
+{
+	return length;
+}
+
+FileMap FileMap::Release()
+{
+	return FileMap(std::exchange(mapAddr, nullptr), std::exchange(length, 0));
+}
+
+bool FileMap::IfValid() const
+{
+	return mapAddr != MAP_FAILED && length > 0;
+}
+
+SharedResources init_shared_resources(std::string target_path)
+{
+	SharedResources shared_resources;
+
+	//打开文件，获取文件描述符
+	std::shared_ptr<FileDescriptor> p_file_descriptor = std::make_shared<FileDescriptor>(
+		open(target_path.c_str(), O_RDONLY)
+	);
+	if(!p_file_descriptor->IfValid()) {
+		fmt::println("-- Failed to open file --");
+		return {};
+	}
+	shared_resources.pFileDescriptor = std::move(p_file_descriptor);
+
+	//获取文件状态信息（文件大小）
+	struct stat file_stat;
+	if(fstat(shared_resources.pFileDescriptor->Get(), &file_stat) == -1 ){
+		fmt::println("-- Failed to get file stat --");
+		return {};
+	}
+	shared_resources.fileSize = file_stat.st_size;
+
+	//将文件映射到虚拟地址空间
+	std::shared_ptr<FileMap> p_file_map = std::make_shared<FileMap>(
+		mmap(
+			NULL,
+			shared_resources.fileSize,
+			PROT_READ,
+			MAP_PRIVATE,
+			shared_resources.pFileDescriptor->Get(),
+			0
+		)
+	);
+	if(!p_file_map_handle->IfValid()) {
+		fmt::println("-- Failed to create file mapping: {} --", GetLastError());
+		return {};
+	}
+	shared_resources.pFileMapHandle = std::move(p_file_map_handle);
+
+	//将文件映射的视图映射到进程的地址空间
+	auto p_map_view = std::make_shared<MapView>(MapViewOfFile(
+		shared_resources.pFileMapHandle->Get(),
+		FILE_MAP_READ,
+		0,
+		0,
+		0
+	));
+	if(!p_map_view->IfValid()) {
+		fmt::println("-- Failed to map view of file: {} --", GetLastError());
+		return {};
+	}
+	shared_resources.pMapView = std::move(p_map_view);
+
+	shared_resources.ifValid = true;
+	return shared_resources;
 }
 
 #endif
