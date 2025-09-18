@@ -44,15 +44,8 @@ void thread_worker_function(
 	}
 	
 	//检查系统内存
-	MEMORYSTATUSEX mem_info;
-	mem_info.dwLength = sizeof(MEMORYSTATUSEX);
-	if(GlobalMemoryStatusEx(&mem_info)) {
-		if(mem_info.ullTotalPhys < thread_cnt * read_cnt_max * 3 / 4) {
-			fmt::println("-- Error: Pyhsical memory not enough for read file in zip --");
-			return;
-		}
-	} else {
-		fmt::println("-- Warnning: Cant get physical memory --");
+	if(!check_memory(thread_cnt)) {
+		return;
 	}
 
 	//初始化内存资源
@@ -153,6 +146,37 @@ void thread_worker_function(
 	}
 	_freea(try_password);
 	_freea(file_data);
+}
+
+inline bool check_memory(const int & thread_cnt)
+{
+#if defined(_WIN32)
+	MEMORYSTATUSEX mem_info;
+	mem_info.dwLength = sizeof(MEMORYSTATUSEX);
+	if(GlobalMemoryStatusEx(&mem_info)) {
+		if(mem_info.ullTotalPhys < thread_cnt * read_cnt_max * 3 / 4) {
+			fmt::println("-- Error: Pyhsical memory not enough for read file in zip --");
+			return false;
+		}
+	} else {
+		fmt::println("-- Warnning: Cant get physical memory --");
+	}
+	return true;
+#endif
+
+#if defined(__linux__)
+	std::ifstream meminfo_file("/proc/meminfo");
+	if(meminfo_file.is_open()) {
+		std::string line;
+		uint64_t total_memory = 0;
+		while(std::getline(meminfo_file, line)) {
+			if(line.find("MemTotal:") == 0) {
+				std::string value = line.substr(line.find(":") + 1);
+
+			}
+		}
+	}
+#endif
 }
 
 void generate_password(

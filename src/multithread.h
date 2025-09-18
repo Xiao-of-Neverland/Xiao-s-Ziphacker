@@ -5,6 +5,7 @@
 #include <thread>
 #include <cmath>
 #include <zlib.h>
+#include <iostream>
 #include <fstream>
 #include <map>
 #include <magic.h>
@@ -123,6 +124,9 @@ void thread_worker_function(
     zip_uint64_t file_index,
 	Options options
 );
+
+//检查系统内存
+inline bool check_memory(const int & thread_cnt);
 
 //-- 需要极限优化性能 --
 //将index转化为对应密码字符串
