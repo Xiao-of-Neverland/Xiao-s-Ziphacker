@@ -166,16 +166,29 @@ inline bool check_memory(const int & thread_cnt)
 
 #if defined(__linux__)
 	std::ifstream meminfo_file("/proc/meminfo");
+	long total_mem = -1;
+	bool ret = true;
 	if(meminfo_file.is_open()) {
 		std::string line;
 		uint64_t total_memory = 0;
 		while(std::getline(meminfo_file, line)) {
 			if(line.find("MemTotal:") == 0) {
 				std::string value = line.substr(line.find(":") + 1);
-
+				auto start_pos = line.find_first_of(numbers);
+				auto end_pos = line.find_first_not_of(numbers);
+				total_mem = std::stol(value.substr(start_pos, end_pos - start_pos)) * 1024;
+				break;
 			}
 		}
+		if(total_mem < thread_cnt * read_cnt_max * 3 / 4) {
+			fmt::println("-- Error: Pyhsical memory not enough for read file in zip --");
+			ret = false;
+		}
+		meminfo_file.close();
+	} else {
+		fmt::println("-- Warnning: Cant get physical memory --");
 	}
+	return ret;
 #endif
 }
 
