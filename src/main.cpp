@@ -41,7 +41,6 @@ int main(int argc, char * argv[])
 		return 1;
 	}
 	
-
 	//初始化线程数量
 	int thread_cnt = options.threadCnt;
 	if(thread_cnt == 0) {
@@ -111,35 +110,7 @@ int main(int argc, char * argv[])
 
 	wait_worker(options, shared_resources, start_time, worker_threads);
 
-	//记录终止时间
-	auto end_time = timer::now();
-	auto time_cost_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-		end_time - start_time
-	).count();
-
-	//计算破解速度
-	int password_len_all_try = options.maxPasswordLen;
-	uint64_t try_cnt = index_when_found;
-	if(if_password_found) {
-		++try_cnt;
-		password_len_all_try = password.length() - 1;
-	}
-	for(size_t i = options.minPasswordLen; i <= password_len_all_try; ++i) {
-		try_cnt += pow(options.charSet.length(), i);
-	}
-
-	//输出破解速度
-	fmt::println("Time cost: {} ms", time_cost_ms);
-	fmt::println("Count of try passwords: {}", try_cnt);
-	double trys_per_sec = try_cnt / ((double)time_cost_ms / 1000);
-	fmt::println("Count of trys per sec: {:.0f}", trys_per_sec);
-
-	//输出是否破解成功及破解密码
-	if(if_password_found) {
-		fmt::println("Password found: \"{}\"", password);
-	} else {
-		fmt::println("Password not found");
-	}
+	print_result_info(options, start_time);
 
 	return 0;
 }
@@ -160,11 +131,11 @@ void wait_worker(
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		for(size_t i = options.minPasswordLen; i < password_len_ob; ++i) {
 			try_cnt_ob += pow(options.charSet.length(), i);
-		}if(shared_resources.pMapView.use_count() <= 1) {
+		}if(running_thread_cnt < 1) {
 			try_cnt_ob = try_cnt_max;
 		}
 		print_progress(try_cnt_ob, try_cnt_max, start_time);
-		if(shared_resources.pMapView.use_count() <= 1) {
+		if(running_thread_cnt < 1) {
 			break;
 		}
 	} while(!if_password_found);
@@ -242,4 +213,37 @@ void print_progress(uint64_t try_cnt_ob, uint64_t try_cnt_max, time_point start_
 		time_need_str
 	);
 	std::cout.flush();
+}
+
+void print_result_info(Options & options, time_point start_time)
+{
+	//记录终止时间
+	auto end_time = timer::now();
+	auto time_cost_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+		end_time - start_time
+	).count();
+
+	//计算破解速度
+	int password_len_all_try = options.maxPasswordLen;
+	uint64_t try_cnt = index_when_found;
+	if(if_password_found) {
+		++try_cnt;
+		password_len_all_try = password.length() - 1;
+	}
+	for(size_t i = options.minPasswordLen; i <= password_len_all_try; ++i) {
+		try_cnt += pow(options.charSet.length(), i);
+	}
+
+	//输出破解速度
+	fmt::println("Time cost: {} ms", time_cost_ms);
+	fmt::println("Count of try passwords: {}", try_cnt);
+	double trys_per_sec = try_cnt / ((double)time_cost_ms / 1000);
+	fmt::println("Count of trys per sec: {:.0f}", trys_per_sec);
+
+	//输出是否破解成功及破解密码
+	if(if_password_found) {
+		fmt::println("Password found: \"{}\"", password);
+	} else {
+		fmt::println("Password not found");
+	}
 }

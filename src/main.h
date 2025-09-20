@@ -6,7 +6,6 @@
 #include <chrono>
 #include <iostream>
 
-
 constexpr inline int progress_bar_width = 50;
 
 typedef std::chrono::high_resolution_clock timer;
@@ -21,5 +20,8 @@ void wait_worker(
 );
 
 //根据数据输出任务进度条
-void print_progress(uint64_t try_cnt_ob, uint64_t try_cnt_max, time_point start_timer);
+void print_progress(uint64_t try_cnt_ob, uint64_t try_cnt_max, time_point start_time);
+
+//输出任务结果信息
+void print_result_info(Options & options, time_point start_time);
 

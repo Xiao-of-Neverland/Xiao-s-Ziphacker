@@ -75,6 +75,9 @@ void thread_worker_function(
 		}
 	}
 
+	//进程开始进行破解工作，计数器+1
+	++running_thread_cnt;
+
 	//遍历密码长度，尝试密码组合
 	auto char_set_len = options.charSet.length();
 	for(int password_len = options.minPasswordLen;
@@ -144,6 +147,9 @@ void thread_worker_function(
 	if(!if_password_found) {
 		index_ob = pow(char_set_len, options.maxPasswordLen);
 	}
+
+	//进程结束，释放内存，计数器-1
+	--running_thread_cnt;
 	_freea(try_password);
 	_freea(file_data);
 }

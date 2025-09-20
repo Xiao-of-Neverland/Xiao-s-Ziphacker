@@ -12,7 +12,7 @@
 
 
 //定义全局变量
-
+inline int running_thread_cnt = 0;
 inline uint64_t read_cnt_max = 1024;
 
 //找到的密码
