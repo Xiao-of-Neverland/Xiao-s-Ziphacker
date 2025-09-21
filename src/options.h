@@ -18,7 +18,9 @@ inline std::string signs = " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
 struct Options
 {
 	bool ifValid = false;
+	bool ifDirMode = false;
 	std::filesystem::path targetPath;
+	std::filesystem::path dirPath;
 	std::string charSet;
 	int minPasswordLen = 0;
 	int maxPasswordLen = 0;
@@ -35,8 +37,14 @@ void print_help();
 //编码转换
 std::string gbk_to_utf8(const char * gbk_str);
 
+//检查路径
+bool check_path(std::string & utf8_path);
+
 //初始化目标文件路径。适用于windows
 std::filesystem::path init_target_path(std::string_view & raw_path);
+
+//初始化目标目录
+std::filesystem::path init_dir_path(std::string_view & raw_path);
 
 //初始化密码长度范围
 std::pair<int, int> init_password_len_range(size_t & i, int & argc, char * argv[]);

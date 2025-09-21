@@ -163,29 +163,39 @@ std::string gbk_to_utf8(const char * gbk_str)
 	auto utf8_size = WideCharToMultiByte(CP_UTF8, 0, wstr.data(), -1, nullptr, 0, nullptr, nullptr);
 	std::string utf8_str(utf8_size, 0);
 	WideCharToMultiByte(CP_UTF8, 0, wstr.data(), -1, utf8_str.data(), utf8_size, nullptr, nullptr);
+	utf8_str.pop_back();
 	return utf8_str;
+}
+
+bool check_path(std::string & utf8_path)
+{
+	//检查是否包含非法字符
+	if(utf8_path.find_first_of("<>\"|?*\0") != std::string::npos) {
+		fmt::println("-- Error: Invalid target file path --");
+		return false;
+	}
+
+	//检查文件是否存在
+	auto target_path = std::filesystem::path(utf8_path);
+	if(!std::filesystem::exists(target_path)) {
+		fmt::println("-- Error: Invalid target file path, not exist --");
+		return false;
+	}
+
+	return true;
 }
 
 std::filesystem::path init_target_path(std::string_view & raw_path)
 {
 	//编码转换
 	auto utf8_path = gbk_to_utf8(raw_path.data());
-	utf8_path.pop_back();
 
-	//检查是否包含非法字符
-	if(utf8_path.find_first_of("<>\"|?*\0") != std::string::npos) {
-		fmt::println("-- Error: Invalid target file path --");
-		return "";
-	}
-
-	//检查文件是否存在
-	auto target_path = std::filesystem::u8path(utf8_path);
-	if(!std::filesystem::exists(target_path)) {
-		fmt::println("-- Error: Invalid target file path, not exist --");
+	if(!check_path(utf8_path)) {
 		return "";
 	}
 
 	//检查文件拓展名
+	auto target_path = std::filesystem::path(utf8_path);
 	auto path_extension = target_path.extension().generic_string();
 	if(path_extension != ".zip" && path_extension != ".ZIP") {
 		fmt::println("-- Error: Target file is not ZIP file --");
@@ -193,6 +203,23 @@ std::filesystem::path init_target_path(std::string_view & raw_path)
 	}
 
 	return target_path;
+}
+
+std::filesystem::path init_dir_path(std::string_view & raw_path)
+{
+	auto utf8_path = gbk_to_utf8(raw_path.data());
+
+	if(!check_path(utf8_path)) {
+		return "";
+	}
+
+	auto dir_path = std::filesystem::path(utf8_path);
+	if(!std::filesystem::is_directory(dir_path)) {
+		fmt::println("-- Error: Dir path is not a FOLDER --");
+		return "";
+	}
+
+	return std::filesystem::path();
 }
 
 std::pair<int, int> init_password_len_range(size_t & i, int & argc, char * argv[])
