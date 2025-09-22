@@ -6,7 +6,8 @@ Options init_options(int & argc, char * argv[])
 	Options options;
 
 	bool if_allocate_charset = false;
-	bool if_allocate_path = false;
+	bool if_allocate_target_path = false;
+	bool if_allocate_dir_path = false;
 	bool if_allocate_range = false;
 	bool if_allocate_thread = false;
 
@@ -33,12 +34,16 @@ Options init_options(int & argc, char * argv[])
 			if_have_signs = true;
 			if_allocate_charset = true;
 		} else if(arg == "-t" || arg == "-T") {
-			if(if_allocate_path) {
+			if(if_allocate_target_path) {
 				fmt::println("-- Error: Multiple allocate target file path --");
 				return options;
 			}
+			if(if_allocate_dir_path) {
+				fmt::println("-- Error: [target path] is disabled when [dir path] was given --");
+				return options;
+			}
 			if(i + 1 >= argc) {
-				fmt::println("-- Error: Invalid arguments, need target file path --");
+				fmt::println("-- Error: Invalid arguments, need target path --");
 				return options;
 			}
 			++i;
@@ -47,7 +52,27 @@ Options init_options(int & argc, char * argv[])
 			if(options.targetPath.generic_string().empty()) {
 				return options;
 			}
-			if_allocate_path = true;
+			if_allocate_target_path = true;
+		} else if(arg == "-d" || arg == "-D") {
+			if(if_allocate_dir_path) {
+				fmt::println("-- Error: Multiple allocate dir file path --");
+				return options;
+			}
+			if(if_allocate_target_path) {
+				fmt::println("-- Error: [dir path] is disabled when [target path] was given --");
+				return options;
+			}
+			if(i + 1 >= argc) {
+				fmt::println("-- Error: Invalid arguments, need dir path --");
+				return options;
+			}
+			++i;
+			std::string_view raw_path = argv[i];
+			options.dirPath = init_dir_path(raw_path);
+			if(options.dirPath.generic_string().empty()) {
+				return options;
+			}
+			if_allocate_dir_path = true;
 		} else if(arg == "-r" || arg == "-R") {
 			if(if_allocate_range) {
 				fmt::println("-- Error: Multiple allocate password len range --");
@@ -103,14 +128,14 @@ Options init_options(int & argc, char * argv[])
 	if(!if_allocate_charset) {
 		fmt::println("-- Error: Need allocate password charset --");
 	}
-	if(!if_allocate_path) {
+	if(!if_allocate_target_path) {
 		fmt::println("-- Error: Need allocate target file path --");
 	}
 	if(!if_allocate_range) {
 		fmt::println("-- Error: Need allocate password len range --");
 	}
 
-	if(if_allocate_charset && if_allocate_path && if_allocate_range) {
+	if(if_allocate_charset && if_allocate_target_path && if_allocate_range) {
 		options.ifValid = true;
 	}
 
@@ -119,8 +144,8 @@ Options init_options(int & argc, char * argv[])
 
 void print_help()
 {
-	fmt::print("usage: XiaosZiphacker.exe [char set option(s)] [target path] [password len range]");
-	fmt::println(" [multithread cnt](optional)\n");
+	fmt::print("usage: XiaosZiphacker.exe [char set option(s)] [path]");
+	fmt::println(" [password len range] [multithread cnt](optional)\n");
 
 	fmt::println("char set option(s):");
 	fmt::println("\t[-n | -N]\tadd all numbers to char set");
@@ -129,10 +154,19 @@ void print_help()
 	fmt::println("\t[-s | -S]\tadd all other printable ASCII signs to char set");
 	fmt::println("these char set option(s) need at least one, repeated will be ignore\n");
 
+	fmt::println("path([target path] OR [dir path]):");
+	fmt::println("\tuse [target path] to hack single file, invalid with [dir path]");
+	fmt::println("\tuse [dir path] to hack all zip file in dir, invalid with [target path]");
+
 	fmt::println("target path:");
 	fmt::println("\t[-t | -T]\ttell prog to get target path");
 	fmt::println("\t[PATH | \"PATH\"]\ttarget path, have to be exist, valid and end with \".zip\"");
-	fmt::println("[-t | -T] must be followed by [PATH | \"PATH\"], both need one and only one\n");
+	fmt::println("[-t | -T] must be followed by [PATH | \"PATH\"], both need one and only one");
+
+	fmt::println("dir path:");
+	fmt::println("\t[-d | -D]\ttell prog to get dir path");
+	fmt::println("\t[PATH | \"PATH\"]\dir path, have to be exist and valid");
+	fmt::println("[-d | -D] must be followed by [PATH | \"PATH\"], both need one and only one\n");
 
 	fmt::println("password len range:");
 	fmt::println("\t[-r | -R]\ttell prog to get password len range");
