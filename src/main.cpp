@@ -56,6 +56,17 @@ int main(int argc, char * argv[])
 	//初始化线程共享资源
 	auto shared_resources = init_shared_resources(options.targetPath.generic_string());
 
+	std::vector<std::filesystem::path> zip_path_vector;
+	if(options.ifDirMode) {
+		for(const auto & file_entry : std::filesystem::directory_iterator(options.dirPath)) {
+			if(file_entry.is_regular_file()) {
+
+			}
+		}
+	} else {
+		zip_path_vector.push_back(options.targetPath);
+	}
+
 	//初始化zip文档
 	auto zip_archive = pre_init_zip_archive(shared_resources);
 	if(!zip_archive.IfValid()) {

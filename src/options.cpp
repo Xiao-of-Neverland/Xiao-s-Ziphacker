@@ -128,8 +128,8 @@ Options init_options(int & argc, char * argv[])
 	if(!if_allocate_charset) {
 		fmt::println("-- Error: Need allocate password charset --");
 	}
-	if(!if_allocate_target_path) {
-		fmt::println("-- Error: Need allocate target file path --");
+	if(!(if_allocate_target_path || if_allocate_dir_path)) {
+		fmt::println("-- Error: Need allocate target or dir path --");
 	}
 	if(!if_allocate_range) {
 		fmt::println("-- Error: Need allocate password len range --");
