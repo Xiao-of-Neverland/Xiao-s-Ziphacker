@@ -165,7 +165,7 @@ void print_help()
 
 	fmt::println("dir path:");
 	fmt::println("\t[-d | -D]\ttell prog to get dir path");
-	fmt::println("\t[PATH | \"PATH\"]\dir path, have to be exist and valid");
+	fmt::println("\t[PATH | \"PATH\"]\tdir path, have to be exist and valid");
 	fmt::println("[-d | -D] must be followed by [PATH | \"PATH\"], both need one and only one\n");
 
 	fmt::println("password len range:");
@@ -180,7 +180,7 @@ void print_help()
 	fmt::println("[-m | -M] must be followed by [CNT], IF GIVED, both need one and only one");
 	fmt::println("[multithread cnt] is optional, if not gived, prog will set it automatically\n");
 
-	fmt::println("full example: XiaosZiphacker.exe -t \"D:\\test.zip\" -n -u -l -r 1,4");
+	fmt::println("full example: XiaosZiphacker.exe -t \"D:/test.zip\" -n -u -l -r 1,4");
 }
 
 std::string gbk_to_utf8(const char * gbk_str)
@@ -230,8 +230,8 @@ std::filesystem::path init_target_path(std::string_view & raw_path)
 
 	//检查文件拓展名
 	auto target_path = std::filesystem::path(utf8_path);
-	auto path_extension = target_path.extension().generic_string();
-	if(path_extension != ".zip" && path_extension != ".ZIP") {
+	auto extension = target_path.extension().generic_string();
+	if(extension != ".zip" && extension != ".ZIP") {
 		fmt::println("-- Error: Target file is not ZIP file --");
 		return "";
 	}

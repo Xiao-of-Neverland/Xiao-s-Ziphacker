@@ -11,6 +11,9 @@ constexpr inline int progress_bar_width = 50;
 typedef std::chrono::high_resolution_clock timer;
 typedef std::chrono::steady_clock::time_point time_point;
 
+//获取zip文档内用于破解的文件索引，同时预处理多格式文件
+int get_file_index(SharedResources shared_resources);
+
 //等待子线程任务进行，打印进度条
 void wait_worker(
 	Options & options,

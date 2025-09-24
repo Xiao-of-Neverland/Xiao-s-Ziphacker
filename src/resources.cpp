@@ -104,13 +104,13 @@ bool ZipArchive::IfValid() const
 
 //外部函数部分
 
-SharedResources init_shared_resources(std::string target_path)
+SharedResources init_shared_resources(std::string zip_path)
 {
 	SharedResources shared_resources;
 
 	//打开目标文件，获取文件句柄
 	auto p_file_handle = std::make_shared<FileHandle>(CreateFileA(
-		target_path.c_str(),
+		zip_path.c_str(),
 		GENERIC_READ,
 		FILE_SHARE_READ,
 		nullptr,
@@ -232,13 +232,13 @@ bool FileMap::IfValid() const
 	return mapAddr != MAP_FAILED && length > 0;
 }
 
-SharedResources init_shared_resources(std::string target_path)
+SharedResources init_shared_resources(std::string zip_path)
 {
 	SharedResources shared_resources;
 
 	//打开文件，获取文件描述符
 	std::shared_ptr<FileDescriptor> p_file_descriptor = std::make_shared<FileDescriptor>(
-		open(target_path.c_str(), O_RDONLY)
+		open(zip_path.c_str(), O_RDONLY)
 	);
 	if(!p_file_descriptor->IfValid()) {
 		fmt::println("-- Failed to open file --");

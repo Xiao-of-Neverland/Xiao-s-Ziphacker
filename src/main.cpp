@@ -20,7 +20,7 @@ int main(int argc, char * argv[])
 		fmt::println("Need options, use '-h' to get help info");
 		return 1;
 		//debug options
-		options.targetPath = std::filesystem::u8path("D:\\VS2022\\Xiao-s-Ziphacker\\test2.zip");
+		options.targetPath = std::filesystem::u8path("D:/VS2022/Xiao-s-Ziphacker/test2.zip");
 		options.charSet.append(numbers).append(uppers).append(lowers);
 		options.minPasswordLen = 1;
 		options.maxPasswordLen = 4;
@@ -58,28 +58,68 @@ int main(int argc, char * argv[])
 
 	std::vector<std::filesystem::path> zip_path_vector;
 	if(options.ifDirMode) {
-		for(const auto & file_entry : std::filesystem::directory_iterator(options.dirPath)) {
-			if(file_entry.is_regular_file()) {
-
+		try {
+			for(const auto & file_entry : std::filesystem::directory_iterator(options.dirPath)) {
+				if(file_entry.is_regular_file()) {
+					const std::filesystem::path & file_path = file_entry.path();
+					auto extension = file_path.extension().generic_string();
+					if(extension == ".zip" || extension == ".ZIP") {
+						zip_path_vector.push_back(file_path);
+					}
+				}
 			}
+		} catch(const std::filesystem::filesystem_error & err) {
+			std::cerr << "-- File system error: " << err.what() << " --" << std::endl;
+			return 1;
 		}
 	} else {
 		zip_path_vector.push_back(options.targetPath);
 	}
 
+	auto file_index = get_file_index(shared_resources);
+	if(file_index < 0) {
+		return 1;
+	}
+
+	//记录启动时间
+	auto start_time = timer::now();
+
+	//创建线程
+	std::vector<std::thread> worker_threads;
+	for(int thread_id = 0; thread_id < thread_cnt; ++thread_id) {
+		worker_threads.emplace_back(
+			thread_worker_function,
+			thread_id,
+			thread_cnt,
+			shared_resources,
+			file_index,
+			options
+		);
+	}
+
+	wait_worker(options, shared_resources, start_time, worker_threads);
+
+	print_result_info(options, start_time);
+
+	return 0;
+}
+
+int get_file_index(SharedResources shared_resources)
+{
 	//初始化zip文档
 	auto zip_archive = pre_init_zip_archive(shared_resources);
 	if(!zip_archive.IfValid()) {
 		fmt::println("-- Error: Failed to open ZIP archive --");
-		return 1;
+		return -1;
 	}
 
 	//检查zip文档内文件条目
 	auto zip_entries_cnt = zip_get_num_entries(zip_archive.Get(), 0);
 	if(zip_entries_cnt < 1) {
 		fmt::println("-- Error: ZIP archive have no file --");
-		return 1;
+		return -1;
 	}
+
 	zip_uint64_t encrypted_file_index = -1;
 	zip_stat_t file_stat;
 	zip_stat_init(&file_stat);
@@ -100,30 +140,10 @@ int main(int argc, char * argv[])
 	}
 	if(encrypted_file_index == -1) {
 		fmt::println("-- Error: ZIP archive have no encrypted file --");
-		return 1;
+		return -1;
 	}
 
-	//记录启动时间
-	auto start_time = timer::now();
-
-	//创建线程
-	std::vector<std::thread> worker_threads;
-	for(int thread_id = 0; thread_id < thread_cnt; ++thread_id) {
-		worker_threads.emplace_back(
-			thread_worker_function,
-			thread_id,
-			thread_cnt,
-			shared_resources,
-			encrypted_file_index,
-			options
-		);
-	}
-
-	wait_worker(options, shared_resources, start_time, worker_threads);
-
-	print_result_info(options, start_time);
-
-	return 0;
+	return encrypted_file_index;
 }
 
 void wait_worker(
