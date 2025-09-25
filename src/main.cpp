@@ -53,9 +53,6 @@ int main(int argc, char * argv[])
 		}
 	}
 
-	//初始化线程共享资源
-	auto shared_resources = init_shared_resources(options.targetPath.generic_string());
-
 	std::vector<std::filesystem::path> zip_path_vector;
 	if(options.ifDirMode) {
 		try {
@@ -76,30 +73,40 @@ int main(int argc, char * argv[])
 		zip_path_vector.push_back(options.targetPath);
 	}
 
-	auto file_index = get_file_index(shared_resources);
-	if(file_index < 0) {
-		return 1;
+	for(size_t i = 0; i < zip_path_vector.size(); ++i) {
+		//当前zip文档信息
+		auto zip_path_str = zip_path_vector[i].generic_string();
+		fmt::println("\nCurrent: {} of {} archive(s)", i + 1, zip_path_vector.size());
+		fmt::println("Zip path: {}", zip_path_str);
+
+		//初始化线程共享资源
+		auto shared_resources = init_shared_resources(zip_path_str);
+
+		auto file_index = get_file_index(shared_resources);
+		if(file_index < 0) {
+			return 1;
+		}
+
+		//记录启动时间
+		auto start_time = timer::now();
+
+		//创建线程
+		std::vector<std::thread> worker_thread_vector;
+		for(int thread_id = 0; thread_id < thread_cnt; ++thread_id) {
+			worker_thread_vector.emplace_back(
+				thread_worker_function,
+				thread_id,
+				thread_cnt,
+				shared_resources,
+				file_index,
+				options
+			);
+		}
+
+		wait_worker(options, shared_resources, start_time, worker_thread_vector);
+
+		print_result_info(options, start_time);
 	}
-
-	//记录启动时间
-	auto start_time = timer::now();
-
-	//创建线程
-	std::vector<std::thread> worker_threads;
-	for(int thread_id = 0; thread_id < thread_cnt; ++thread_id) {
-		worker_threads.emplace_back(
-			thread_worker_function,
-			thread_id,
-			thread_cnt,
-			shared_resources,
-			file_index,
-			options
-		);
-	}
-
-	wait_worker(options, shared_resources, start_time, worker_threads);
-
-	print_result_info(options, start_time);
 
 	return 0;
 }
@@ -114,8 +121,8 @@ int get_file_index(SharedResources shared_resources)
 	}
 
 	//检查zip文档内文件条目
-	auto zip_entries_cnt = zip_get_num_entries(zip_archive.Get(), 0);
-	if(zip_entries_cnt < 1) {
+	auto file_cnt = zip_get_num_entries(zip_archive.Get(), 0);
+	if(file_cnt < 1) {
 		fmt::println("-- Error: ZIP archive have no file --");
 		return -1;
 	}
@@ -123,12 +130,12 @@ int get_file_index(SharedResources shared_resources)
 	zip_uint64_t encrypted_file_index = -1;
 	zip_stat_t file_stat;
 	zip_stat_init(&file_stat);
-	for(size_t i = 0; i < zip_entries_cnt; ++i) {
+	for(size_t i = 0; i < file_cnt; ++i) {
 		zip_stat_index(zip_archive.Get(), i, 0, &file_stat);
 		if(file_stat.valid & ZIP_STAT_ENCRYPTION_METHOD) {
 			if(file_stat.encryption_method != ZIP_EM_NONE) {
 				fmt::println(
-					"File name: {}, Comp method:{}, Encryp method: {}",
+					"File name: {}, Comp method: {}, Encryp method: {}",
 					file_stat.name,
 					file_stat.comp_method,
 					file_stat.encryption_method
@@ -150,7 +157,7 @@ void wait_worker(
 	Options & options,
 	SharedResources & shared_resources,
 	time_point & start_time,
-	std::vector<std::thread> & worker_threads
+	std::vector<std::thread> & worker_thread_vector
 )
 {
 	uint64_t try_cnt_max = 0;
@@ -173,7 +180,7 @@ void wait_worker(
 	fmt::print("\n");
 
 	//等待线程终止
-	for(auto & worker_thread : worker_threads) {
+	for(auto & worker_thread : worker_thread_vector) {
 		worker_thread.join();
 	}
 }

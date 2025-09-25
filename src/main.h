@@ -7,6 +7,7 @@
 #include <iostream>
 
 constexpr inline int progress_bar_width = 50;
+inline std::string output_file_name = "passwords.txt";
 
 typedef std::chrono::high_resolution_clock timer;
 typedef std::chrono::steady_clock::time_point time_point;
@@ -19,7 +20,7 @@ void wait_worker(
 	Options & options,
 	SharedResources & shared_resources,
 	time_point & start_time,
-	std::vector<std::thread> & worker_threads
+	std::vector<std::thread> & worker_thread_vector
 );
 
 //根据数据输出任务进度条
