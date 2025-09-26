@@ -18,7 +18,7 @@ int main(int argc, char * argv[])
 		}
 	} else {
 		fmt::println("Need options, use '-h' to get help info");
-		return 1;
+		//return 1;
 		//debug options
 		options.targetPath = std::filesystem::u8path("D:/VS2022/Xiao-s-Ziphacker/test2.zip");
 		options.charSet.append(numbers).append(uppers).append(lowers);
@@ -73,11 +73,13 @@ int main(int argc, char * argv[])
 		zip_path_vector.push_back(options.targetPath);
 	}
 
+	std::ofstream output_file(options.dirPath / output_file_name);
 	for(size_t i = 0; i < zip_path_vector.size(); ++i) {
 		//当前zip文档信息
 		auto zip_path_str = zip_path_vector[i].generic_string();
 		fmt::println("\nCurrent: {} of {} archive(s)", i + 1, zip_path_vector.size());
 		fmt::println("Zip path: {}", zip_path_str);
+		output_file << "Zip:" << zip_path_str << std::endl;
 
 		//初始化线程共享资源
 		auto shared_resources = init_shared_resources(zip_path_str);
@@ -106,7 +108,9 @@ int main(int argc, char * argv[])
 		wait_worker(options, shared_resources, start_time, worker_thread_vector);
 
 		print_result_info(options, start_time);
+		output_file << "Password:" << password << '\n' << std::endl;
 	}
+	output_file.close();
 
 	return 0;
 }
