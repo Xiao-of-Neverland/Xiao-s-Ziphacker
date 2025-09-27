@@ -73,7 +73,10 @@ int main(int argc, char * argv[])
 		zip_path_vector.push_back(options.targetPath);
 	}
 
-	std::ofstream output_file(options.dirPath / output_file_name);
+	std::ofstream output_file;
+	if(options.ifDirMode) {
+		output_file.open(options.dirPath / output_file_name);
+	}
 	for(size_t i = 0; i < zip_path_vector.size(); ++i) {
 		//当前zip文档信息
 		auto zip_path_str = zip_path_vector[i].generic_string();
@@ -108,9 +111,15 @@ int main(int argc, char * argv[])
 		wait_worker(options, shared_resources, start_time, worker_thread_vector);
 
 		print_result_info(options, start_time);
-		output_file << "Password:" << password << '\n' << std::endl;
+		if(options.ifDirMode) {
+			output_file << "Password:" << password << '\n' << std::endl;
+		}
 	}
-	output_file.close();
+	if(options.ifDirMode) {
+		output_file.close();
+		fmt::print("\nAll archive(s) done, see passwords in file: ");
+		fmt::println("{}", (options.dirPath / output_file_name).generic_string());
+	}
 
 	return 0;
 }
