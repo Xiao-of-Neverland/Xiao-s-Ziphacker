@@ -8,7 +8,7 @@ int main(int argc, char * argv[])
 	if(argc > 1) {
 		options = init_options(argc, argv);
 		fmt::println("Isvalid: {}", options.ifValid);
-		fmt::println("Path: {}", options.targetPath.u8string());
+		fmt::println("Path: {}", options.targetPath.generic_u8string());
 		fmt::println("Charset: {}", options.charSet);
 		fmt::println("Len range: {} - {}", options.minPasswordLen, options.maxPasswordLen);
 		fmt::println("Thread cnt: {} (\"0\" means use prog setting)", options.threadCnt);
@@ -18,9 +18,12 @@ int main(int argc, char * argv[])
 		}
 	} else {
 		fmt::println("Need options, use '-h' to get help info");
-		//return 1;
+		return 1;
 		//debug options
 		options.targetPath = std::filesystem::u8path("D:/VS2022/Xiao-s-Ziphacker/test2.zip");
+		options.targetPath = std::filesystem::u8path("D:/VS2022/Xiao-s-Ziphacker/中文测试.zip");
+		options.dirPath = std::filesystem::u8path("D:/VS2022/Xiao-s-Ziphacker/test");
+		options.ifDirMode = false;
 		options.charSet.append(numbers).append(uppers).append(lowers);
 		options.minPasswordLen = 1;
 		options.maxPasswordLen = 4;
@@ -59,7 +62,7 @@ int main(int argc, char * argv[])
 			for(const auto & file_entry : std::filesystem::directory_iterator(options.dirPath)) {
 				if(file_entry.is_regular_file()) {
 					const std::filesystem::path & file_path = file_entry.path();
-					auto extension = file_path.extension().generic_string();
+					auto extension = file_path.extension().generic_u8string();
 					if(extension == ".zip" || extension == ".ZIP") {
 						zip_path_vector.push_back(file_path);
 					}
@@ -79,13 +82,18 @@ int main(int argc, char * argv[])
 	}
 	for(size_t i = 0; i < zip_path_vector.size(); ++i) {
 		//当前zip文档信息
-		auto zip_path_str = zip_path_vector[i].generic_string();
+		auto zip_path = zip_path_vector[i];
+		auto zip_path_u8str = zip_path_vector[i].generic_u8string();
 		fmt::println("\nCurrent: {} of {} archive(s)", i + 1, zip_path_vector.size());
-		fmt::println("Zip path: {}", zip_path_str);
-		output_file << "Zip:" << zip_path_str << std::endl;
+		fmt::println("Zip path: {}", zip_path_u8str);
+		output_file << "Zip:" << zip_path_u8str << std::endl;
 
 		//初始化线程共享资源
-		auto shared_resources = init_shared_resources(zip_path_str);
+		auto shared_resources = init_shared_resources(zip_path.generic_string());
+		if(!shared_resources.ifValid) {
+			fmt::println("-- Error: Failed to init shared resources. Please check last error --");
+			return 1;
+		}
 
 		auto file_index = get_file_index(shared_resources);
 		if(file_index < 0) {
@@ -118,7 +126,7 @@ int main(int argc, char * argv[])
 	if(options.ifDirMode) {
 		output_file.close();
 		fmt::print("\nAll archive(s) done, see passwords in file: ");
-		fmt::println("{}", (options.dirPath / output_file_name).generic_string());
+		fmt::println("{}", (options.dirPath / output_file_name).generic_u8string());
 	}
 
 	return 0;
@@ -177,19 +185,18 @@ void wait_worker(
 	for(size_t i = options.minPasswordLen; i <= options.maxPasswordLen; ++i) {
 		try_cnt_max += pow(options.charSet.length(), i);
 	}
-	do {
+	while(!if_password_found) {
 		uint64_t try_cnt_ob = index_ob;
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		for(size_t i = options.minPasswordLen; i < password_len_ob; ++i) {
 			try_cnt_ob += pow(options.charSet.length(), i);
-		}if(running_thread_cnt < 1) {
-			try_cnt_ob = try_cnt_max;
 		}
 		print_progress(try_cnt_ob, try_cnt_max, start_time);
 		if(running_thread_cnt < 1) {
+			print_progress(try_cnt_ob, try_cnt_max, start_time);
 			break;
 		}
-	} while(!if_password_found);
+	}
 	fmt::print("\n");
 
 	//等待线程终止
@@ -201,7 +208,7 @@ void wait_worker(
 void print_progress(uint64_t try_cnt_ob, uint64_t try_cnt_max, time_point start_time)
 {
 	float percentage = (float)try_cnt_ob / try_cnt_max * 100;
-	if(percentage > 100.0) {
+	if(percentage > 100.0 || running_thread_cnt < 1) {
 		percentage = 100.0;
 	}
 
@@ -249,7 +256,7 @@ void print_progress(uint64_t try_cnt_ob, uint64_t try_cnt_max, time_point start_
 		}
 	}
 
-	int bar_filled = progress_bar_width * try_cnt_ob / try_cnt_max;
+	int bar_filled = progress_bar_width * percentage / 100;
 	std::string bar(progress_bar_width, ' ');
 	for(size_t i = 0; i < progress_bar_width; ++i) {
 		if(i < bar_filled) {

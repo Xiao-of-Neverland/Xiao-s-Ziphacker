@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <fmt/core.h>
 #include <Windows.h>
+#include <iostream>
 
 //字符集
 inline std::string numbers = "0123456789";

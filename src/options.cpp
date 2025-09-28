@@ -49,7 +49,7 @@ Options init_options(int & argc, char * argv[])
 			++i;
 			std::string_view raw_path = argv[i];
 			options.targetPath = init_target_path(raw_path);
-			if(options.targetPath.generic_string().empty()) {
+			if(options.targetPath.generic_u8string().empty()) {
 				return options;
 			}
 			if_allocate_target_path = true;
@@ -69,7 +69,7 @@ Options init_options(int & argc, char * argv[])
 			++i;
 			std::string_view raw_path = argv[i];
 			options.dirPath = init_dir_path(raw_path);
-			if(options.dirPath.generic_string().empty()) {
+			if(options.dirPath.generic_u8string().empty()) {
 				return options;
 			}
 			if_allocate_dir_path = true;
@@ -210,9 +210,15 @@ bool check_path(std::string & utf8_path)
 	}
 
 	//检查文件是否存在
-	auto target_path = std::filesystem::path(utf8_path);
-	if(!std::filesystem::exists(target_path)) {
-		fmt::println("-- Error: Invalid target file path, not exist --");
+	try {
+		auto target_path = std::filesystem::path(utf8_path);
+		fmt::println("{}", target_path.generic_string());
+		if(!std::filesystem::exists(target_path)) {
+			fmt::println("-- Error: Invalid target file path, not exist --");
+			return false;
+		}
+	} catch(const std::filesystem::filesystem_error & err) {
+		std::cerr << "-- File system error: " << err.what() << " --" << std::endl;
 		return false;
 	}
 
@@ -230,7 +236,7 @@ std::filesystem::path init_target_path(std::string_view & raw_path)
 
 	//检查文件拓展名
 	auto target_path = std::filesystem::path(utf8_path);
-	auto extension = target_path.extension().generic_string();
+	auto extension = target_path.extension().generic_u8string();
 	if(extension != ".zip" && extension != ".ZIP") {
 		fmt::println("-- Error: Target file is not ZIP file --");
 		return "";

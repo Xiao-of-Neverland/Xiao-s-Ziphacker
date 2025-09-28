@@ -3,7 +3,11 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
-# zip file foe test
+# dir for Test
+[Tt]est/
+[Tt]ests/
+
+# zip file for test
 *.zip
 
 # User-specific files
