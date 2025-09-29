@@ -8,7 +8,13 @@ int main(int argc, char * argv[])
 	if(argc > 1) {
 		options = init_options(argc, argv);
 		fmt::println("Isvalid: {}", options.ifValid);
-		fmt::println("Path: {}", options.targetPath.generic_u8string());
+		if(options.ifDirMode) {
+			fmt::println("Mode: directory");
+			fmt::println("Directory: {}", options.dirPath.generic_u8string());
+		} else {
+			fmt::println("Mode: archive");
+			fmt::println("Archive: {}", options.targetPath.generic_u8string());
+		}
 		fmt::println("Charset: {}", options.charSet);
 		fmt::println("Len range: {} - {}", options.minPasswordLen, options.maxPasswordLen);
 		fmt::println("Thread cnt: {} (\"0\" means use prog setting)", options.threadCnt);
@@ -29,6 +35,12 @@ int main(int argc, char * argv[])
 		options.maxPasswordLen = 4;
 		options.threadCnt = 10;
 		options.ifValid = true;
+
+		if(std::filesystem::exists(options.targetPath)) {
+			fmt::println("Debug path exist");
+		} else {
+			fmt::println("Debug path NOT exist");
+		}
 	}
 
 	//检查libmagic数据库文件是否存在

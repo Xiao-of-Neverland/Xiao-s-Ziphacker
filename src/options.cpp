@@ -211,8 +211,7 @@ bool check_path(std::string & utf8_path)
 
 	//检查文件是否存在
 	try {
-		auto target_path = std::filesystem::path(utf8_path);
-		fmt::println("{}", target_path.generic_string());
+		auto target_path = std::filesystem::u8path(utf8_path);
 		if(!std::filesystem::exists(target_path)) {
 			fmt::println("-- Error: Invalid target file path, not exist --");
 			return false;
@@ -235,7 +234,7 @@ std::filesystem::path init_target_path(std::string_view & raw_path)
 	}
 
 	//检查文件拓展名
-	auto target_path = std::filesystem::path(utf8_path);
+	auto target_path = std::filesystem::u8path(utf8_path);
 	auto extension = target_path.extension().generic_u8string();
 	if(extension != ".zip" && extension != ".ZIP") {
 		fmt::println("-- Error: Target file is not ZIP file --");
