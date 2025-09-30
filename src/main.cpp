@@ -166,6 +166,10 @@ int get_file_index(SharedResources shared_resources)
 	for(size_t i = 0; i < file_cnt; ++i) {
 		zip_stat_index(zip_archive.Get(), i, 0, &file_stat);
 		if(file_stat.valid & ZIP_STAT_ENCRYPTION_METHOD) {
+			auto file_name_len = strlen(file_stat.name);
+			if(file_name_len > 0 && file_stat.name[file_name_len - 1] != '/') {
+				continue;
+			}
 			if(file_stat.encryption_method != ZIP_EM_NONE) {
 				fmt::println(
 					"File name: {}, Comp method: {}, Encryp method: {}",
