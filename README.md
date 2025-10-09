@@ -10,16 +10,22 @@
 2. cmd进入程序目录
 3. 运行指令`XiaosZiphacker.exe [你的参数]`（参数相关信息可以通过`-h`查看）
 
-示例：`XiaosZiphacker.exe -n -u -l -t "D:/zipneedhack.zip" -r 1-6`
+示例：
+
+`XiaosZiphacker.exe -n -u -l -a "D:/zipneedhack.zip" -r 1-6`
+
+`XiaosZiphacker.exe -n -u -l -s -d "D:/folder" -r 1,4`
 
 说明：
 - `-n`：将数字0~9加入字符集
 - `-u`：将大写字母A~Z加入字符集
 - `-l`：将小写字母a~z加入字符集
-- `-t`：指定下一个参数为目标zip文件路径
-- `"D:/zipneedhack.zip"`：目标zip文件路径
+- `-a`：指定下一个参数为目标zip文档路径（不能与`-d`同时使用）
+- `-d`: 指定下一个参数为目标文件夹路径（不能与`-a`同时使用）
+- `"D:/zipneedhack.zip"`：目标zip文档路径
+- `"D:/folder"`: 目标文件夹路径。程序会依次尝试破解文件夹下的`.zip`文件并将密码写入在该目录的`passwords.txt`中（不包含子文件夹）
 - `-r`：指定下一个（或两个）参数为尝试的密码长度范围
-- `1-6`：密码长度范围为1~6（等价于`1 6`）
+- `1-6` `1,4`：密码长度范围为1至6（1至4）（分别等价于`1 6` `1 4`）
 
 ## 自行构建（VS2022）
 1. git clone或者下载源代码

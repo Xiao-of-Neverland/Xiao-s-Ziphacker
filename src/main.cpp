@@ -13,7 +13,7 @@ int main(int argc, char * argv[])
 			fmt::println("Directory: {}", options.dirPath.generic_u8string());
 		} else {
 			fmt::println("Mode: archive");
-			fmt::println("Archive: {}", options.targetPath.generic_u8string());
+			fmt::println("Archive: {}", options.archivePath.generic_u8string());
 		}
 		fmt::println("Charset: {}", options.charSet);
 		fmt::println("Len range: {} - {}", options.minPasswordLen, options.maxPasswordLen);
@@ -26,8 +26,8 @@ int main(int argc, char * argv[])
 		fmt::println("Need options, use '-h' to get help info");
 		return 1;
 		//debug options
-		options.targetPath = std::filesystem::u8path("D:/VS2022/Xiao-s-Ziphacker/test2.zip");
-		options.targetPath = std::filesystem::u8path("D:/VS2022/Xiao-s-Ziphacker/中文测试.zip");
+		options.archivePath = std::filesystem::u8path("D:/VS2022/Xiao-s-Ziphacker/test2.zip");
+		options.archivePath = std::filesystem::u8path("D:/VS2022/Xiao-s-Ziphacker/中文测试.zip");
 		options.dirPath = std::filesystem::u8path("D:/VS2022/Xiao-s-Ziphacker/test");
 		options.ifDirMode = false;
 		options.charSet.append(numbers).append(uppers).append(lowers);
@@ -36,7 +36,7 @@ int main(int argc, char * argv[])
 		options.threadCnt = 10;
 		options.ifValid = true;
 
-		if(std::filesystem::exists(options.targetPath)) {
+		if(std::filesystem::exists(options.archivePath)) {
 			fmt::println("Debug path exist");
 		} else {
 			fmt::println("Debug path NOT exist");
@@ -85,7 +85,7 @@ int main(int argc, char * argv[])
 			return 1;
 		}
 	} else {
-		zip_path_vector.push_back(options.targetPath);
+		zip_path_vector.push_back(options.archivePath);
 	}
 
 	std::ofstream output_file;

@@ -20,7 +20,7 @@ struct Options
 {
 	bool ifValid = false;
 	bool ifDirMode = false;
-	std::filesystem::path targetPath;
+	std::filesystem::path archivePath;
 	std::filesystem::path dirPath;
 	std::string charSet;
 	int minPasswordLen = 0;
@@ -42,7 +42,7 @@ std::string gbk_to_utf8(const char * gbk_str);
 bool check_path(std::string & utf8_path);
 
 //初始化目标文件路径。适用于windows
-std::filesystem::path init_target_path(std::string_view & raw_path);
+std::filesystem::path init_archive_path(std::string_view & raw_path);
 
 //初始化目标目录
 std::filesystem::path init_dir_path(std::string_view & raw_path);

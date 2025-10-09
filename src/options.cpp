@@ -6,7 +6,7 @@ Options init_options(int & argc, char * argv[])
 	Options options;
 
 	bool if_allocate_charset = false;
-	bool if_allocate_target_path = false;
+	bool if_allocate_archive_path = false;
 	bool if_allocate_dir_path = false;
 	bool if_allocate_range = false;
 	bool if_allocate_thread = false;
@@ -33,33 +33,33 @@ Options init_options(int & argc, char * argv[])
 		} else if(arg == "-s" || arg == "-S") {
 			if_have_signs = true;
 			if_allocate_charset = true;
-		} else if(arg == "-t" || arg == "-T") {
-			if(if_allocate_target_path) {
-				fmt::println("-- Error: Multiple allocate target file path --");
+		} else if(arg == "-a" || arg == "-A") {
+			if(if_allocate_archive_path) {
+				fmt::println("-- Error: Multiple allocate archive path --");
 				return options;
 			}
 			if(if_allocate_dir_path) {
-				fmt::println("-- Error: [target path] is disabled when [dir path] was given --");
+				fmt::println("-- Error: [archive path] is disabled when [dir path] was given --");
 				return options;
 			}
 			if(i + 1 >= argc) {
-				fmt::println("-- Error: Invalid arguments, need target path --");
+				fmt::println("-- Error: Invalid arguments, need archive path --");
 				return options;
 			}
 			++i;
 			std::string_view raw_path = argv[i];
-			options.targetPath = init_target_path(raw_path);
-			if(options.targetPath.generic_u8string().empty()) {
+			options.archivePath = init_archive_path(raw_path);
+			if(options.archivePath.generic_u8string().empty()) {
 				return options;
 			}
-			if_allocate_target_path = true;
+			if_allocate_archive_path = true;
 		} else if(arg == "-d" || arg == "-D") {
 			if(if_allocate_dir_path) {
-				fmt::println("-- Error: Multiple allocate dir file path --");
+				fmt::println("-- Error: Multiple allocate dir path --");
 				return options;
 			}
-			if(if_allocate_target_path) {
-				fmt::println("-- Error: [dir path] is disabled when [target path] was given --");
+			if(if_allocate_archive_path) {
+				fmt::println("-- Error: [dir path] is disabled when [archive path] was given --");
 				return options;
 			}
 			if(i + 1 >= argc) {
@@ -128,14 +128,14 @@ Options init_options(int & argc, char * argv[])
 	if(!if_allocate_charset) {
 		fmt::println("-- Error: Need allocate password charset --");
 	}
-	if(!(if_allocate_target_path || if_allocate_dir_path)) {
-		fmt::println("-- Error: Need allocate target or dir path --");
+	if(!(if_allocate_archive_path || if_allocate_dir_path)) {
+		fmt::println("-- Error: Need allocate archive or dir path --");
 	}
 	if(!if_allocate_range) {
 		fmt::println("-- Error: Need allocate password len range --");
 	}
 
-	if(if_allocate_charset && if_allocate_target_path && if_allocate_range) {
+	if(if_allocate_charset && if_allocate_archive_path && if_allocate_range) {
 		options.ifValid = true;
 	}
 
@@ -154,14 +154,14 @@ void print_help()
 	fmt::println("\t[-s | -S]\tadd all other printable ASCII signs to char set");
 	fmt::println("these char set option(s) need at least one, repeated will be ignore\n");
 
-	fmt::println("path([target path] OR [dir path]):");
-	fmt::println("\tuse [target path] to hack single file, invalid with [dir path]");
-	fmt::println("\tuse [dir path] to hack all zip file in dir, invalid with [target path]");
+	fmt::println("path([archive path] OR [dir path]):");
+	fmt::println("\tuse [archive path] to hack single archive, invalid with [dir path]");
+	fmt::println("\tuse [dir path] to hack all zip archive in dir, invalid with [archive path]");
 
-	fmt::println("target path:");
-	fmt::println("\t[-t | -T]\ttell prog to get target path");
-	fmt::println("\t[PATH | \"PATH\"]\ttarget path, have to be exist, valid and end with \".zip\"");
-	fmt::println("[-t | -T] must be followed by [PATH | \"PATH\"], both need one and only one");
+	fmt::println("archive path:");
+	fmt::println("\t[-a | -A]\ttell prog to get archive path");
+	fmt::println("\t[PATH | \"PATH\"]\tarchive path, have to be exist, valid and end with \".zip\"");
+	fmt::println("[-a | -A] must be followed by [PATH | \"PATH\"], both need one and only one");
 
 	fmt::println("dir path:");
 	fmt::println("\t[-d | -D]\ttell prog to get dir path");
@@ -205,15 +205,15 @@ bool check_path(std::string & utf8_path)
 {
 	//检查是否包含非法字符
 	if(utf8_path.find_first_of("<>\"|?*\0") != std::string::npos) {
-		fmt::println("-- Error: Invalid target file path --");
+		fmt::println("-- Error: Invalid archive path --");
 		return false;
 	}
 
-	//检查文件是否存在
+	//检查路径是否存在
 	try {
-		auto target_path = std::filesystem::u8path(utf8_path);
-		if(!std::filesystem::exists(target_path)) {
-			fmt::println("-- Error: Invalid target file path, not exist --");
+		auto fs_path = std::filesystem::u8path(utf8_path);
+		if(!std::filesystem::exists(fs_path)) {
+			fmt::println("-- Error: Invalid archive path, not exist --");
 			return false;
 		}
 	} catch(const std::filesystem::filesystem_error & err) {
@@ -224,7 +224,7 @@ bool check_path(std::string & utf8_path)
 	return true;
 }
 
-std::filesystem::path init_target_path(std::string_view & raw_path)
+std::filesystem::path init_archive_path(std::string_view & raw_path)
 {
 	//编码转换
 	auto utf8_path = gbk_to_utf8(raw_path.data());
@@ -234,14 +234,14 @@ std::filesystem::path init_target_path(std::string_view & raw_path)
 	}
 
 	//检查文件拓展名
-	auto target_path = std::filesystem::u8path(utf8_path);
-	auto extension = target_path.extension().generic_u8string();
+	auto archive_path = std::filesystem::u8path(utf8_path);
+	auto extension = archive_path.extension().generic_u8string();
 	if(extension != ".zip" && extension != ".ZIP") {
-		fmt::println("-- Error: Target file is not ZIP file --");
+		fmt::println("-- Error: archive is not ZIP --");
 		return "";
 	}
 
-	return target_path;
+	return archive_path;
 }
 
 std::filesystem::path init_dir_path(std::string_view & raw_path)
