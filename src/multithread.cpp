@@ -9,7 +9,7 @@ void thread_worker_function(
 	Options options
 )
 {
-	fmt::println("Thread id: {} running...", thread_id);
+	//fmt::println("Thread id: {} running...", thread_id);
 
 	if(if_password_found) {
 		return;
@@ -29,14 +29,14 @@ void thread_worker_function(
 	auto file_type = get_expected_file_type(file_stat.name);
 	bool if_need_check_crc = false;
 	bool if_need_check_magic = false;
-	if(file_stat.size <= read_cnt_max) {
+	if(file_stat.size <= expected_read_cnt) {
 		if_need_check_crc = true;
-		read_cnt_max = file_stat.size;
+		expected_read_cnt = file_stat.size;
 	} else {
 		if(file_stat.comp_method == ZIP_CM_STORE) {
 			if(file_type == FileType::UNSUPPORTED) {
 				if_need_check_crc = true;
-				read_cnt_max = file_stat.size;
+				expected_read_cnt = file_stat.size;
 			} else {
 				if_need_check_magic = true;
 			}
@@ -53,7 +53,7 @@ void thread_worker_function(
 	if(try_password == nullptr) {
 		return;
 	}
-	uint8_t * file_data = (uint8_t *)_malloca(read_cnt_max);
+	uint8_t * file_data = (uint8_t *)_malloca(expected_read_cnt);
 	if(file_data == nullptr) {
 		_freea(try_password);
 		return;
@@ -99,7 +99,7 @@ void thread_worker_function(
 				try_password
 			);
 			if(file != nullptr) {
-				auto read_cnt = zip_fread(file, file_data, read_cnt_max);
+				auto read_cnt = zip_fread(file, file_data, expected_read_cnt);
 				auto file_err_zip = zip_file_get_error(file)->zip_err;
 				auto file_err_sys = zip_file_get_error(file)->sys_err;
 				zip_file_error_clear(file);
@@ -107,7 +107,7 @@ void thread_worker_function(
 				if(file_err_zip + file_err_sys != 0) {
 					continue;
 				}
-				if(read_cnt < read_cnt_max) {
+				if(read_cnt < expected_read_cnt) {
 					continue;
 				}
 				if(if_need_check_crc) {
@@ -160,7 +160,7 @@ inline bool check_memory(const int & thread_cnt)
 	MEMORYSTATUSEX mem_info;
 	mem_info.dwLength = sizeof(MEMORYSTATUSEX);
 	if(GlobalMemoryStatusEx(&mem_info)) {
-		if(mem_info.ullTotalPhys < thread_cnt * read_cnt_max * 3 / 4) {
+		if(mem_info.ullTotalPhys < thread_cnt * expected_read_cnt * 3 / 4) {
 			fmt::println("-- Error: Pyhsical memory not enough for read file in zip --");
 			return false;
 		}
@@ -186,7 +186,7 @@ inline bool check_memory(const int & thread_cnt)
 				break;
 			}
 		}
-		if(total_mem < thread_cnt * read_cnt_max * 3 / 4) {
+		if(total_mem < thread_cnt * expected_read_cnt * 3 / 4) {
 			fmt::println("-- Error: Pyhsical memory not enough for read file in zip --");
 			ret = false;
 		}

@@ -26,8 +26,8 @@ int main(int argc, char * argv[])
 		fmt::println("Need options, use '-h' to get help info");
 		return 1;
 		//debug options
-		options.archivePath = std::filesystem::u8path("D:/VS2022/Xiao-s-Ziphacker/test2.zip");
-		options.archivePath = std::filesystem::u8path("D:/VS2022/Xiao-s-Ziphacker/中文测试.zip");
+		options.archivePath = std::filesystem::u8path("D:/VS2022/Xiao-s-Ziphacker/test4.zip");
+		//options.archivePath = std::filesystem::u8path("D:/VS2022/Xiao-s-Ziphacker/中文测试.zip");
 		options.dirPath = std::filesystem::u8path("D:/VS2022/Xiao-s-Ziphacker/test");
 		options.ifDirMode = false;
 		options.charSet.append(numbers).append(uppers).append(lowers);
@@ -167,7 +167,7 @@ int get_file_index(SharedResources shared_resources)
 		zip_stat_index(zip_archive.Get(), i, 0, &file_stat);
 		if(file_stat.valid & ZIP_STAT_ENCRYPTION_METHOD) {
 			auto file_name_len = strlen(file_stat.name);
-			if(file_name_len > 0 && file_stat.name[file_name_len - 1] != '/') {
+			if(file_name_len <= 0 || file_stat.name[file_name_len - 1] == '/') {
 				continue;
 			}
 			if(file_stat.encryption_method != ZIP_EM_NONE) {
