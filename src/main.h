@@ -29,3 +29,6 @@ void print_progress(uint64_t try_cnt_ob, uint64_t try_cnt_max, time_point start_
 //输出任务结果信息
 void print_result_info(Options & options, time_point start_time);
 
+//重置结果信息
+void reset_result_info();
+

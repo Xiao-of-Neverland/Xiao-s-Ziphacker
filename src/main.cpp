@@ -29,7 +29,7 @@ int main(int argc, char * argv[])
 		options.archivePath = std::filesystem::u8path("D:/VS2022/Xiao-s-Ziphacker/test4.zip");
 		//options.archivePath = std::filesystem::u8path("D:/VS2022/Xiao-s-Ziphacker/中文测试.zip");
 		options.dirPath = std::filesystem::u8path("D:/VS2022/Xiao-s-Ziphacker/test");
-		options.ifDirMode = false;
+		options.ifDirMode = true;
 		options.charSet.append(numbers).append(uppers).append(lowers);
 		options.minPasswordLen = 1;
 		options.maxPasswordLen = 4;
@@ -97,8 +97,8 @@ int main(int argc, char * argv[])
 		auto zip_path = zip_path_vector[i];
 		auto zip_path_u8str = zip_path_vector[i].generic_u8string();
 		fmt::println("\nCurrent: {} of {} archive(s)", i + 1, zip_path_vector.size());
-		fmt::println("Zip path: {}", zip_path_u8str);
-		output_file << "Zip:" << zip_path_u8str << std::endl;
+		fmt::println("Path: {}", zip_path_u8str);
+		output_file << "Archive: " << zip_path_u8str << std::endl;
 
 		//初始化线程共享资源
 		auto shared_resources = init_shared_resources(zip_path.generic_string());
@@ -132,8 +132,10 @@ int main(int argc, char * argv[])
 
 		print_result_info(options, start_time);
 		if(options.ifDirMode) {
-			output_file << "Password:" << password << '\n' << std::endl;
+			output_file << "Password: " << password << '\n' << std::endl;
 		}
+
+		reset_result_info();
 	}
 	if(options.ifDirMode) {
 		output_file.close();
@@ -172,7 +174,7 @@ int get_file_index(SharedResources shared_resources)
 			}
 			if(file_stat.encryption_method != ZIP_EM_NONE) {
 				fmt::println(
-					"File name: {}, Comp method: {}, Encryp method: {}",
+					"File name: {}\nComp method: {}, Encryp method: {}",
 					file_stat.name,
 					file_stat.comp_method,
 					file_stat.encryption_method
@@ -201,18 +203,16 @@ void wait_worker(
 	for(size_t i = options.minPasswordLen; i <= options.maxPasswordLen; ++i) {
 		try_cnt_max += pow(options.charSet.length(), i);
 	}
-	while(!if_password_found) {
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	while(running_thread_cnt > 0 && !if_password_found) {
 		uint64_t try_cnt_ob = index_ob;
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		for(size_t i = options.minPasswordLen; i < password_len_ob; ++i) {
 			try_cnt_ob += pow(options.charSet.length(), i);
 		}
 		print_progress(try_cnt_ob, try_cnt_max, start_time);
-		if(running_thread_cnt < 1) {
-			print_progress(try_cnt_ob, try_cnt_max, start_time);
-			break;
-		}
 	}
+	print_progress(try_cnt_max, try_cnt_max, start_time);
 	fmt::print("\n");
 
 	//等待线程终止
@@ -298,13 +298,13 @@ void print_result_info(Options & options, time_point start_time)
 	).count();
 
 	//计算破解速度
-	int password_len_all_try = options.maxPasswordLen;
+	int password_len_tried = options.maxPasswordLen;
 	uint64_t try_cnt = index_when_found;
 	if(if_password_found) {
 		++try_cnt;
-		password_len_all_try = password.length() - 1;
+		password_len_tried = password.length() - 1;
 	}
-	for(size_t i = options.minPasswordLen; i <= password_len_all_try; ++i) {
+	for(size_t i = options.minPasswordLen; i <= password_len_tried; ++i) {
 		try_cnt += pow(options.charSet.length(), i);
 	}
 
@@ -320,4 +320,13 @@ void print_result_info(Options & options, time_point start_time)
 	} else {
 		fmt::println("Password not found");
 	}
+}
+
+void reset_result_info()
+{
+	if_password_found = false;
+	password = "";
+	password_len_ob = 0;
+	index_ob = 0;
+	index_when_found = 0;
 }
