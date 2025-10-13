@@ -13,7 +13,7 @@
 
 //定义全局变量
 inline int running_thread_cnt = 0;
-inline uint64_t expected_read_cnt = 8 * 1024;
+inline uint64_t expected_read_cnt = 64 * 1024;
 
 //找到的密码
 inline std::string password("");

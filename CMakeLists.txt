@@ -14,6 +14,7 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(fmt REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(libzip REQUIRED)
+find_package(ICU REQUIRED COMPONENTS dt uc i18n)
 find_package(unofficial-libmagic CONFIG REQUIRED)
 
 add_executable (XiaosZiphacker
@@ -33,6 +34,7 @@ target_link_libraries(
 			fmt::fmt
 			ZLIB::ZLIB
 			libzip::zip
+			ICU::uc
 			unofficial::libmagic::libmagic
 )
 
