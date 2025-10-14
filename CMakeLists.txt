@@ -34,7 +34,9 @@ target_link_libraries(
 			fmt::fmt
 			ZLIB::ZLIB
 			libzip::zip
+			ICU::dt
 			ICU::uc
+			ICU::i18n
 			unofficial::libmagic::libmagic
 )
 

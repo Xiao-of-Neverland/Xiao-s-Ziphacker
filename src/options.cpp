@@ -183,15 +183,48 @@ void print_help()
 	fmt::println("full example: XiaosZiphacker.exe -t \"D:/test.zip\" -n -u -l -r 1,4");
 }
 
-std::string gbk_to_utf8(const char * gbk_str)
+std::string detect_encoding(const char * raw_cstr)
+{
+	size_t len = strlen(raw_cstr);
+	UErrorCode status = U_ZERO_ERROR;
+	UCharsetDetector * detector = ucsdet_open(&status);
+	if(U_FAILURE(status)) {
+		fmt::println("-- Failed to open detector: {}", u_errorName(status));
+		return {};
+	}
+	
+	ucsdet_setText(detector, raw_cstr, static_cast<int32_t>(len), &status);
+	if(U_FAILURE(status)) {
+		fmt::println("-- Failed to set text: {}", u_errorName(status));
+		ucsdet_close(detector);
+		return {};
+	}
+
+	const UCharsetMatch * match = ucsdet_detect(detector, &status);
+	if(U_FAILURE(status) || !match) {
+		fmt::println("-- Detection failed: {}", u_errorName(status));
+		ucsdet_close(detector);
+		return {};
+	}
+
+	const char * encoding = ucsdet_getName(match, &status);
+	ucsdet_close(detector);
+	if(!encoding || !U_SUCCESS(status)) {
+		return {};
+	}
+
+	return std::string(encoding);
+}
+
+std::string gbk_to_utf8(const char * gbk_cstr)
 {
 	// 将 GBK 转换为 UTF-16
-	auto size = MultiByteToWideChar(CP_ACP, 0, gbk_str, -1, nullptr, 0);
+	auto size = MultiByteToWideChar(CP_ACP, 0, gbk_cstr, -1, nullptr, 0);
 	if(size == 0) {
 		return "";
 	}
 	std::wstring wstr(size, 0);
-	MultiByteToWideChar(CP_ACP, 0, gbk_str, -1, wstr.data(), size);
+	MultiByteToWideChar(CP_ACP, 0, gbk_cstr, -1, wstr.data(), size);
 
 	// 将 UTF-16 转换为 UTF-8
 	auto utf8_size = WideCharToMultiByte(CP_UTF8, 0, wstr.data(), -1, nullptr, 0, nullptr, nullptr);

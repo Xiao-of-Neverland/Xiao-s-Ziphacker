@@ -179,6 +179,7 @@ int get_file_index(SharedResources shared_resources)
 					file_stat.comp_method,
 					file_stat.encryption_method
 				);
+				fmt::println("Encoding: {}", detect_encoding(file_stat.name));
 				encrypted_file_index = i;
 				break;
 			}

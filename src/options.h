@@ -8,6 +8,10 @@
 #include <fmt/core.h>
 #include <Windows.h>
 #include <iostream>
+#include <unicode/ucsdet.h>
+#include <unicode/ucnv.h>
+#include <unicode/ustring.h>
+#include <unicode/unistr.h>
 
 //字符集
 inline std::string numbers = "0123456789";
@@ -35,8 +39,11 @@ Options init_options(int & argc, char * argv[]);
 //输出帮助信息
 void print_help();
 
+//检测字符串编码
+std::string detect_encoding(const char * raw_cstr);
+
 //编码转换
-std::string gbk_to_utf8(const char * gbk_str);
+std::string gbk_to_utf8(const char * gbk_cstr);
 
 //检查路径
 bool check_path(std::string & utf8_path);
