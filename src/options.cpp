@@ -183,37 +183,73 @@ void print_help()
 	fmt::println("full example: XiaosZiphacker.exe -t \"D:/test.zip\" -n -u -l -r 1,4");
 }
 
-std::string detect_encoding(const char * raw_cstr)
+Encoding detect_encoding(const char * raw_cstr)
 {
 	size_t len = strlen(raw_cstr);
 	UErrorCode status = U_ZERO_ERROR;
 	UCharsetDetector * detector = ucsdet_open(&status);
 	if(U_FAILURE(status)) {
-		fmt::println("-- Failed to open detector: {}", u_errorName(status));
-		return {};
+		fmt::println("-- Failed to open detector: {} --", u_errorName(status));
+		return {"", 0};
 	}
 	
-	ucsdet_setText(detector, raw_cstr, static_cast<int32_t>(len), &status);
+	ucsdet_setText(detector, raw_cstr, len, &status);
 	if(U_FAILURE(status)) {
-		fmt::println("-- Failed to set text: {}", u_errorName(status));
+		fmt::println("-- Failed to set text: {} --", u_errorName(status));
 		ucsdet_close(detector);
-		return {};
+		return {"", 0};
 	}
 
 	const UCharsetMatch * match = ucsdet_detect(detector, &status);
 	if(U_FAILURE(status) || !match) {
-		fmt::println("-- Detection failed: {}", u_errorName(status));
+		fmt::println("-- Detection failed: {} --", u_errorName(status));
 		ucsdet_close(detector);
-		return {};
+		return {"", 0};
 	}
 
 	const char * encoding = ucsdet_getName(match, &status);
+	auto confidence = ucsdet_getConfidence(match, &status);
 	ucsdet_close(detector);
 	if(!encoding || !U_SUCCESS(status)) {
-		return {};
+		return {"", 0};
 	}
 
-	return std::string(encoding);
+	return {encoding, confidence};
+}
+
+std::string convert_to_utf8(const char * raw_cstr)
+{
+	auto raw_len = strlen(raw_cstr);
+	auto encoding = detect_encoding(raw_cstr);
+
+	UErrorCode status = U_ZERO_ERROR;
+	UConverter * cnv = ucnv_open(encoding.first.c_str(), &status);
+	if(U_FAILURE(status)) {
+		fmt::println("-- Failed to open converter --");
+		return "";
+	}
+
+	int32_t uchar_len = ucnv_toUChars(cnv, nullptr, 0, raw_cstr, raw_len, &status);
+	if(status != U_BUFFER_OVERFLOW_ERROR) {
+		fmt::println("-- Failed to get Unicode len --");
+		return "";
+	}
+
+	status = U_ZERO_ERROR;
+	std::vector<UChar> buffer(uchar_len + 1);
+	ucnv_toUChars(cnv, buffer.data(), uchar_len + 1, raw_cstr, raw_len, &status);
+	if(U_FAILURE(status)) {
+		fmt::println("-- Failed to convert to Unicode: {} --", u_errorName(status));
+		ucnv_close(cnv);
+		return "";
+	}
+
+	icu::UnicodeString ustr(buffer.data());
+	std::string utf8_str;
+	ustr.toUTF8String(utf8_str);
+	ucnv_close(cnv);
+
+	return utf8_str;
 }
 
 std::string gbk_to_utf8(const char * gbk_cstr)

@@ -166,7 +166,7 @@ int get_file_index(SharedResources shared_resources)
 	zip_stat_t file_stat;
 	zip_stat_init(&file_stat);
 	for(size_t i = 0; i < file_cnt; ++i) {
-		zip_stat_index(zip_archive.Get(), i, 0, &file_stat);
+		zip_stat_index(zip_archive.Get(), i, ZIP_FL_ENC_RAW, &file_stat);
 		if(file_stat.valid & ZIP_STAT_ENCRYPTION_METHOD) {
 			auto file_name_len = strlen(file_stat.name);
 			if(file_name_len <= 0 || file_stat.name[file_name_len - 1] == '/') {
@@ -175,11 +175,10 @@ int get_file_index(SharedResources shared_resources)
 			if(file_stat.encryption_method != ZIP_EM_NONE) {
 				fmt::println(
 					"File name: {}\nComp method: {}, Encryp method: {}",
-					file_stat.name,
+					convert_to_utf8(file_stat.name),
 					file_stat.comp_method,
 					file_stat.encryption_method
 				);
-				fmt::println("Encoding: {}", detect_encoding(file_stat.name));
 				encrypted_file_index = i;
 				break;
 			}

@@ -13,6 +13,8 @@
 #include <unicode/ustring.h>
 #include <unicode/unistr.h>
 
+typedef std::pair<std::string, int> Encoding;
+
 //字符集
 inline std::string numbers = "0123456789";
 inline std::string uppers = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -40,7 +42,10 @@ Options init_options(int & argc, char * argv[]);
 void print_help();
 
 //检测字符串编码
-std::string detect_encoding(const char * raw_cstr);
+Encoding detect_encoding(const char * raw_cstr);
+
+//转换为UTF8
+std::string convert_to_utf8(const char * raw_cstr);
 
 //编码转换
 std::string gbk_to_utf8(const char * gbk_cstr);
