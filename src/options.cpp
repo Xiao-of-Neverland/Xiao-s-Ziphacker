@@ -20,6 +20,7 @@ Options init_options(int & argc, char * argv[])
 		std::string_view arg(argv[i]);
 		if(arg == "-h" || arg == "-H") {
 			print_help();
+			options.ifPrintHelp = true;
 			return options;
 		} else if(arg == "-n" || arg == "-N") {
 			if_have_numbers = true;
@@ -50,6 +51,7 @@ Options init_options(int & argc, char * argv[])
 			std::string_view raw_path = argv[i];
 			options.archivePath = init_archive_path(raw_path);
 			if(options.archivePath.generic_u8string().empty()) {
+				fmt::println("-- Unknown error: empty path --");
 				return options;
 			}
 			if_allocate_archive_path = true;
@@ -68,8 +70,10 @@ Options init_options(int & argc, char * argv[])
 			}
 			++i;
 			std::string_view raw_path = argv[i];
+			options.ifDirMode = true;
 			options.dirPath = init_dir_path(raw_path);
 			if(options.dirPath.generic_u8string().empty()) {
+				fmt::println("-- Unknown error: empty path --");
 				return options;
 			}
 			if_allocate_dir_path = true;
@@ -124,20 +128,24 @@ Options init_options(int & argc, char * argv[])
 	if(if_have_lowers) {
 		options.charSet.append(lowers);
 	}
+	if(if_have_signs) {
+		options.charSet.append(signs);
+	}
 
 	if(!if_allocate_charset) {
 		fmt::println("-- Error: Need allocate password charset --");
+		return options;
 	}
 	if(!(if_allocate_archive_path || if_allocate_dir_path)) {
 		fmt::println("-- Error: Need allocate archive or dir path --");
+		return options;
 	}
 	if(!if_allocate_range) {
 		fmt::println("-- Error: Need allocate password len range --");
+		return options;
 	}
 
-	if(if_allocate_charset && if_allocate_archive_path && if_allocate_range) {
-		options.ifValid = true;
-	}
+	options.ifValid = true;
 
 	return options;
 }
@@ -180,10 +188,10 @@ void print_help()
 	fmt::println("[-m | -M] must be followed by [CNT], IF GIVED, both need one and only one");
 	fmt::println("[multithread cnt] is optional, if not gived, prog will set it automatically\n");
 
-	fmt::println("full example: XiaosZiphacker.exe -t \"D:/test.zip\" -n -u -l -r 1,4");
+	fmt::println("full example: XiaosZiphacker.exe -a \"D:/test.zip\" -n -u -l -r 1,4");
 }
 
-Encoding detect_encoding(const char * raw_cstr)
+std::pair<std::string, int> detect_encoding(const char * raw_cstr)
 {
 	size_t len = strlen(raw_cstr);
 	UErrorCode status = U_ZERO_ERROR;
@@ -220,10 +228,10 @@ Encoding detect_encoding(const char * raw_cstr)
 std::string convert_to_utf8(const char * raw_cstr)
 {
 	auto raw_len = strlen(raw_cstr);
-	auto encoding = detect_encoding(raw_cstr);
+	auto [encoding, confidence] = detect_encoding(raw_cstr);
 
 	UErrorCode status = U_ZERO_ERROR;
-	UConverter * cnv = ucnv_open(encoding.first.c_str(), &status);
+	UConverter * cnv = ucnv_open(encoding.c_str(), &status);
 	if(U_FAILURE(status)) {
 		fmt::println("-- Failed to open converter --");
 		return "";
@@ -274,7 +282,7 @@ bool check_path(std::string & utf8_path)
 {
 	//检查是否包含非法字符
 	if(utf8_path.find_first_of("<>\"|?*\0") != std::string::npos) {
-		fmt::println("-- Error: Invalid archive path --");
+		fmt::println("-- Error: Path include illegal character --");
 		return false;
 	}
 
@@ -282,7 +290,7 @@ bool check_path(std::string & utf8_path)
 	try {
 		auto fs_path = std::filesystem::u8path(utf8_path);
 		if(!std::filesystem::exists(fs_path)) {
-			fmt::println("-- Error: Invalid archive path, not exist --");
+			fmt::println("-- Error: Invalid path, not exist --");
 			return false;
 		}
 	} catch(const std::filesystem::filesystem_error & err) {
@@ -296,9 +304,10 @@ bool check_path(std::string & utf8_path)
 std::filesystem::path init_archive_path(std::string_view & raw_path)
 {
 	//编码转换
-	auto utf8_path = gbk_to_utf8(raw_path.data());
+	auto utf8_path = convert_to_utf8(raw_path.data());
 
 	if(!check_path(utf8_path)) {
+		fmt::println("-- Invalid archive path --");
 		return "";
 	}
 
@@ -315,9 +324,10 @@ std::filesystem::path init_archive_path(std::string_view & raw_path)
 
 std::filesystem::path init_dir_path(std::string_view & raw_path)
 {
-	auto utf8_path = gbk_to_utf8(raw_path.data());
+	auto utf8_path = convert_to_utf8(raw_path.data());
 
 	if(!check_path(utf8_path)) {
+		fmt::println("-- Invalid dir path --");
 		return "";
 	}
 
@@ -327,7 +337,7 @@ std::filesystem::path init_dir_path(std::string_view & raw_path)
 		return "";
 	}
 
-	return std::filesystem::path();
+	return dir_path;
 }
 
 std::pair<int, int> init_password_len_range(size_t & i, int & argc, char * argv[])

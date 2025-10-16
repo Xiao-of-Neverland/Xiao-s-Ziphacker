@@ -6,6 +6,8 @@
 #include <chrono>
 #include <iostream>
 
+inline std::string version("1.1.0");
+
 constexpr inline int progress_bar_width = 50;
 inline std::string output_file_name = "passwords.txt";
 

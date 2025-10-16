@@ -13,7 +13,6 @@
 #include <unicode/ustring.h>
 #include <unicode/unistr.h>
 
-typedef std::pair<std::string, int> Encoding;
 
 //字符集
 inline std::string numbers = "0123456789";
@@ -24,6 +23,7 @@ inline std::string signs = " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
 //结构体：用户输入参数
 struct Options
 {
+	bool ifPrintHelp = false;
 	bool ifValid = false;
 	bool ifDirMode = false;
 	std::filesystem::path archivePath;
@@ -42,7 +42,7 @@ Options init_options(int & argc, char * argv[]);
 void print_help();
 
 //检测字符串编码
-Encoding detect_encoding(const char * raw_cstr);
+std::pair<std::string, int> detect_encoding(const char * raw_cstr);
 
 //转换为UTF8
 std::string convert_to_utf8(const char * raw_cstr);

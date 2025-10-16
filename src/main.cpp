@@ -7,6 +7,11 @@ int main(int argc, char * argv[])
 	Options options;
 	if(argc > 1) {
 		options = init_options(argc, argv);
+		if(options.ifPrintHelp) {
+			return 0;
+		}
+		fmt::println("\n**** Xiao's Ziphacker version {} ****\n", version);
+		fmt::println("Your options: ");
 		fmt::println("Isvalid: {}", options.ifValid);
 		if(options.ifDirMode) {
 			fmt::println("Mode: directory");
