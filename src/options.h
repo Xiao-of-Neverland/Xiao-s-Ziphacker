@@ -47,9 +47,6 @@ std::pair<std::string, int> detect_encoding(const char * raw_cstr);
 //转换为UTF8
 std::string convert_to_utf8(const char * raw_cstr);
 
-//编码转换
-std::string gbk_to_utf8(const char * gbk_cstr);
-
 //检查路径
 bool check_path(std::string & utf8_path);
 

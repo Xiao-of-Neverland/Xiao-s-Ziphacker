@@ -260,24 +260,6 @@ std::string convert_to_utf8(const char * raw_cstr)
 	return utf8_str;
 }
 
-std::string gbk_to_utf8(const char * gbk_cstr)
-{
-	// 将 GBK 转换为 UTF-16
-	auto size = MultiByteToWideChar(CP_ACP, 0, gbk_cstr, -1, nullptr, 0);
-	if(size == 0) {
-		return "";
-	}
-	std::wstring wstr(size, 0);
-	MultiByteToWideChar(CP_ACP, 0, gbk_cstr, -1, wstr.data(), size);
-
-	// 将 UTF-16 转换为 UTF-8
-	auto utf8_size = WideCharToMultiByte(CP_UTF8, 0, wstr.data(), -1, nullptr, 0, nullptr, nullptr);
-	std::string utf8_str(utf8_size, 0);
-	WideCharToMultiByte(CP_UTF8, 0, wstr.data(), -1, utf8_str.data(), utf8_size, nullptr, nullptr);
-	utf8_str.pop_back();
-	return utf8_str;
-}
-
 bool check_path(std::string & utf8_path)
 {
 	//检查是否包含非法字符

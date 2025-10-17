@@ -22,7 +22,12 @@ int main(int argc, char * argv[])
 		}
 		fmt::println("Charset: {}", options.charSet);
 		fmt::println("Len range: {} - {}", options.minPasswordLen, options.maxPasswordLen);
-		fmt::println("Thread cnt: {} (\"0\" means use prog setting)", options.threadCnt);
+		fmt::print("Thread cnt: ");
+		if(options.threadCnt == 0) {
+			fmt::println("AUTO");
+		} else {
+			fmt::println("{}", options.threadCnt);
+		}
 		if(!options.ifValid) {
 			fmt::println("Invalid options, use '-h' to get help info");
 			return 1;
