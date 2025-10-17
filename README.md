@@ -33,8 +33,7 @@
 3. 选择release配置进行生成
 4. 进入解决方案资源管理器的CMake目标视图
 5. 右键CreatePackage，选择生成
-6. 打包好的程序会位于`./Xiao-s-Ziphackerbuild/release/package`
+6. 打包好的程序会位于`./Xiao-s-Ziphacker/build/release/package`
 
 ## 已知异常文档及其异常表现
 1. 文档内只包含以仅存储方式压缩的无法特异性识别其类型的文件：文件较大时占用大量内存且速度较慢
-2. 文档内包含某些编码的中文命名文件：输出的文件名称可能包含乱码（不影响破解）
