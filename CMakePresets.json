@@ -2,7 +2,7 @@
     "version": 3,
     "configurePresets": [
         {
-            "name": "vcpkg",
+            "name": "vcpkg-windows",
             "hidden": true,
             "generator": "Ninja",
             "cacheVariables": {
@@ -12,17 +12,48 @@
             }
         },
         {
-            "name": "debug",
-            "inherits": "vcpkg",
-            "binaryDir": "${sourceDir}/build/debug",
+            "name": "debug-windows",
+            "inherits": "vcpkg-windows",
+            "binaryDir": "${sourceDir}/build/windows/debug",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
             }
         },
         {
-            "name": "release",
-            "inherits": "vcpkg",
-            "binaryDir": "${sourceDir}/build/release",
+            "name": "release-windows",
+            "inherits": "vcpkg-windows",
+            "binaryDir": "${sourceDir}/build/windows/release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "vcpkg-linux",
+            "hidden": true,
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+                "CMAKE_C_COMPILER": "gcc.exe",
+                "CMAKE_CXX_COMPILER": "g++.exe"
+            },
+            "environment": {
+                "VCPKG_TARGET_TRIPLET": "x64-linux"
+            }
+        },
+        {
+            "name": "debug-linux",
+            "hidden": true,
+            "inherits": "vcpkg-linux",
+            "binaryDir": "${sourceDir}/build/linux/debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "release-linux",
+            "hidden": true,
+            "inherits": "vcpkg-linux",
+            "binaryDir": "${sourceDir}/build/linux/release",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
