@@ -5,7 +5,10 @@
 
 cmake_minimum_required (VERSION 3.21)
 
-project ("XiaosZiphacker" LANGUAGES CXX)
+project (XiaosZiphacker
+	VERSION 1.1.0
+	LANGUAGES CXX
+)
 
 include_directories(src)
 
@@ -26,6 +29,11 @@ add_executable (XiaosZiphacker
 	"src/multithread.cpp"
 	"src/options.h"
 	"src/options.cpp"
+)
+
+target_compile_definitions(XiaosZiphacker
+	PRIVATE
+	PROJECT_VERSION="${PROJECT_VERSION}"
 )
 
 target_link_libraries(
@@ -64,23 +72,35 @@ if(WIN32)
 		RENAME "magic.mgc"
 	)
 else()
-	nstall(FILES "${CMAKE_CURRENT_BINARY_DIR}/magic.mgc"
+	install(FILES "${CMAKE_CURRENT_BINARY_DIR}/magic.mgc"
         DESTINATION .
     )
 endif()
 
-install(DIRECTORY "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/bin/"
-	DESTINATION .
-	FILES_MATCHING PATTERN "*.dll"
-)
+if(WIN32)
+	install(DIRECTORY "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/bin/"
+		DESTINATION .
+		FILES_MATCHING PATTERN "*.dll"
+	)
+else()
+	install(DIRECTORY "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/"
+        DESTINATION lib
+        FILES_MATCHING PATTERN "*.so*"
+    )
+endif()
 
 set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
-set(CPACK_PACKAGE_VERSION "1.1.0")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A ziphacker tool by Xiao")
 set(CPACK_PACKAGE_VENDOR "Xiao")
 set(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/package")
 
-set(CPACK_GENERATOR "ZIP")
+if(WIN32)
+	set(CPACK_GENERATOR "ZIP")
+endif()
+if(LINUX)
+	set(CPACK_GENERATOR "TGZ")
+endif()
 
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}")
 

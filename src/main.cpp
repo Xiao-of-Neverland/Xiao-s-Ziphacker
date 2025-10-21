@@ -10,7 +10,7 @@ int main(int argc, char * argv[])
 		if(options.ifPrintHelp) {
 			return 0;
 		}
-		fmt::println("\n**** Xiao's Ziphacker version {} ****\n", version);
+		fmt::println("\n**** Xiao's Ziphacker version {} ****\n", PROJECT_VERSION);
 		fmt::println("Your options: ");
 		fmt::println("Isvalid: {}", options.ifValid);
 		if(options.ifDirMode) {
