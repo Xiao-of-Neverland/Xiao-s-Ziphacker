@@ -41,7 +41,14 @@ target_link_libraries(
 )
 
 if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/magic.mgc")
-    configure_file(${unofficial-libmagic_DICTIONARY} ${CMAKE_CURRENT_BINARY_DIR}/magic.mgc COPYONLY)
+	if(WIN32)
+		configure_file(${unofficial-libmagic_DICTIONARY} ${CMAKE_CURRENT_BINARY_DIR}/magic.mgc COPYONLY)
+	else()
+		find_file(MAGIC_DICT NAMES magic.mgc PATHS ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/misc)
+        if(MAGIC_DICT)
+            configure_file(${MAGIC_DICT} ${CMAKE_CURRENT_BINARY_DIR}/magic.mgc COPYONLY)
+        endif()
+	endif()
 endif()
 
 
@@ -51,10 +58,16 @@ install(TARGETS XiaosZiphacker
     RUNTIME DESTINATION .
 )
 
-install(FILES "${unofficial-libmagic_DICTIONARY}"
-    DESTINATION .
-    RENAME "magic.mgc"
-)
+if(WIN32)
+	install(FILES "${unofficial-libmagic_DICTIONARY}"
+		DESTINATION .
+		RENAME "magic.mgc"
+	)
+else()
+	nstall(FILES "${CMAKE_CURRENT_BINARY_DIR}/magic.mgc"
+        DESTINATION .
+    )
+endif()
 
 install(DIRECTORY "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/bin/"
 	DESTINATION .
